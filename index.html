@@ -2,131 +2,112 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<title>StormPlay 🎮</title>
-
-<meta name="description" content="StormPlay - Speel gratis online games!">
+<title>Mijn Games</title>
 
 <style>
 body {
   margin: 0;
   font-family: Arial;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
+  background: linear-gradient(135deg, #020617, #0f172a);
   color: white;
   text-align: center;
 }
 
 h1 {
-  margin-top: 20px;
-  font-size: 40px;
+  margin: 20px;
+  text-shadow: 0 0 10px cyan;
 }
 
-/* 🔍 zoekbalk */
 #search {
-  margin-top: 20px;
-  padding: 10px;
+  padding: 12px;
   width: 250px;
   border-radius: 10px;
   border: none;
-  font-size: 16px;
+  margin-bottom: 20px;
 }
 
-/* 🎮 menu */
-.menu {
+.container {
   display: flex;
   justify-content: center;
   gap: 25px;
-  margin-top: 40px;
   flex-wrap: wrap;
 }
 
 .game {
-  width: 200px;
-  border-radius: 20px;
-  overflow: hidden;
+  width: 220px;
+  padding: 20px;
+  border-radius: 15px;
+  background: #1e293b;
   cursor: pointer;
   transition: 0.3s;
-  background: #1e293b;
-  text-decoration: none;
-  color: white;
 }
 
 .game:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 20px #00ffff;
+  transform: scale(1.08);
+  box-shadow: 0 0 20px cyan;
 }
 
-.game img {
-  width: 100%;
-  height: 130px;
-  object-fit: cover;
-}
-
-.game p {
-  margin: 10px;
+.icon {
+  font-size: 50px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>⚡ StormPlay</h1>
-<p>Speel. Win. Herhaal.</p>
+<h1>🎮 Mijn Games</h1>
 
-<!-- 🔍 zoekbalk -->
-<input type="text" id="search" placeholder="Zoek een game...">
+<input type="text" id="search" placeholder="Zoek game..." onkeyup="searchGame()">
 
-<div class="menu" id="menu">
+<div class="container">
 
-  <a href="bunny/index.html" class="game">
-    <img src="https://picsum.photos/300/200?1">
-    <p>Bunny Knight</p>
-  </a>
+  <div class="game" onclick="openGame('dogsnake')">
+    <div class="icon">🐶</div>
+    <h2>Dog Snake</h2>
+  </div>
 
-  <a href="boxgame/index.html" class="game">
-    <img src="https://picsum.photos/300/200?2">
-    <p>Box Game</p>
-  </a>
+  <div class="game" onclick="openGame('fishscore')">
+    <div class="icon">🐟</div>
+    <h2>Fish Score</h2>
+  </div>
 
-  <a href="fishscore/index.html" class="game">
-    <img src="https://picsum.photos/300/200?3">
-    <p>Fish Score</p>
-  </a>
+  <div class="game" onclick="openGame('fishgame')">
+    <div class="icon">🎯</div>
+    <h2>Fish Game</h2>
+  </div>
 
-  <a href="circle/index.html" class="game">
-    <img src="https://picsum.photos/300/200?4">
-    <p>Circle Game</p>
-  </a>
+  <div class="game" onclick="openGame('alchemy')">
+    <div class="icon">🧪</div>
+    <h2>Alchemy Sandbox</h2>
+  </div>
 
-  <a href="shooter/index.html" class="game">
-    <img src="https://picsum.photos/300/200?5">
-    <p>Shooter</p>
-  </a>
+  <div class="game" onclick="openGame('boxgame')">
+    <div class="icon">📦</div>
+    <h2>Box Game</h2>
+  </div>
 
-  <a href="runner/index.html" class="game">
-    <img src="https://picsum.photos/300/200?6">
-    <p>Runner</p>
-  </a>
+  <!-- 🐰 NIEUWE GAME -->
+  <div class="game" onclick="openGame('bunny')">
+    <div class="icon">🐰</div>
+    <h2>Bunny Knight</h2>
+  </div>
 
 </div>
 
 <script>
-// 🔍 zoek functie
-const search = document.getElementById("search");
-const games = document.querySelectorAll(".game");
+function openGame(game) {
+  window.location.href = "./" + game + "/index.html";
+}
 
-search.addEventListener("input", () => {
-  let value = search.value.toLowerCase();
+function searchGame() {
+  let input = document.getElementById("search").value.toLowerCase();
+  let games = document.querySelectorAll(".game");
 
   games.forEach(game => {
     let text = game.innerText.toLowerCase();
-
-    if (text.includes(value)) {
-      game.style.display = "block";
-    } else {
-      game.style.display = "none";
-    }
+    game.style.display = text.includes(input) ? "block" : "none";
   });
-});
+}
 </script>
 
 </body>
