@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Ultimate Circle Game</title>
+<style>
+  body {
+    margin: 0;
+    background: radial-gradient(circle, #050505, #000);
+    overflow: hidden;
+    font-family: Arial;
+  }
+  canvas {
+    display: block;
+    margin: auto;
+  }
+  #restartBtn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 15px 30px;
+    font-size: 20px;
+    display: none;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<button id="restartBtn">🔄 Opnieuw spelen</button>
+<canvas id="gameCanvas" width="900" height="600"></canvas>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const restartBtn = document.getElementById("restartBtn");
+
+let gameOver = false;
+
+// PLAYER
+let player;
+
+// DATA
+let enemies, weapons, particles, score;
+
+// INIT
+function initGame() {
+  player = {
+    x: 450,
+    y: 300,
+    r: 20,
+    speed: 4,
+    dashSpeed: 20,
+    canDash: true,
+    hp: 100,
+    maxHp: 100,
+    weapon: null
+  };
+
+  enemies = [];
+  weapons = [];
+  particles = [];
+  score = 0;
+  gameOver = false;
+
+  restartBtn.style.display = "none";
+}
+initGame();
+
+// INPUT
+let keys = {};
+document.addEventListener("keydown", e => keys[e.key] = true);
+document.addEventListener("keyup", e => keys[e.key] = false);
+
+// SPAWN
+setInterval(() => {
+  if (!gameOver) {
+    enemies.push({
+      x: Math.random() * 900,
+      y: -20,
+      r: 20,
+      speed: 2 + Math.random() * 2
+    });
+  }
+}, 900);
+
+setInterval(() => {
+  if (!gameOver) {
+    let type = Math.random() > 0.5 ? "bat" : "knife";
+    weapons.push({
+      x: Math.random() * 860,
+      y: Math.random() * 560,
+      r: 15,
+      type
+    });
+  }
+}, 5000);
+
+// PARTICLES
+function createParticles(x, y, color, amount = 10) {
+  for (let i = 0; i < amount; i++) {
+    particles.push({
+      x, y,
+      dx: (Math.random() - 0.5) * 6,
+      dy: (Math.random() - 0.5) * 6,
+      life: 30,
+      color
+    });
+  }
+}
+
+// DASH (SHIFT)
+function dash() {
+  if (!player.canDash) return;
+  player.canDash = false;
+
+  if (keys["ArrowUp"]) player.y -= player.dashSpeed;
+  if (keys["ArrowDown"]) player.y += player.dashSpeed;
+  if (keys["ArrowLeft"]) player.x -= player.dashSpeed;
+  if (keys["ArrowRight"]) player.x += player.dashSpeed;
+
+  createParticles(player.x, player.y, "#00ffff", 25);
+
+  setTimeout(() => player.canDash = true, 800);
+}
+
+// ATTACK (SPACE)
+function attack() {
+  if (!player.weapon) return;
+
+  let range = player.weapon === "bat" ? 100 : 70;
+
+  enemies = enemies.filter(e => {
+    let dx = e.x - player.x;
+    let dy = e.y - player.y;
+    let dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < range) {
+      createParticles(e.x, e.y, "orange", 25);
+      score++;
+      return false;
+    }
+    return true;
+  });
+}
+
+// UPDATE
+function update() {
+
+  if (gameOver) return;
+
+  // movement
+  if (keys["ArrowUp"]) player.y -= player.speed;
+  if (keys["ArrowDown"]) player.y += player.speed;
+  if (keys["ArrowLeft"]) player.x -= player.speed;
+  if (keys["ArrowRight"]) player.x += player.speed;
+
+  // DASH = SHIFT
+  if (keys["Shift"]) {
+    dash();
+    keys["Shift"] = false;
+  }
+
+  // ATTACK = SPACE
+  if (keys[" "]) {
+    attack();
+    keys[" "] = false;
+  }
+
+  // enemies
+  enemies.forEach(e => e.y += e.speed);
+
+  // pickup
+  weapons = weapons.filter(w => {
+    let dx = w.x - player.x;
+    let dy = w.y - player.y;
+    let dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < player.r + w.r) {
+      player.weapon = w.type;
+      createParticles(w.x, w.y, "yellow", 20);
+      return false;
+    }
+    return true;
+  });
+
+  // collision → DAMAGE
+  for (let e of enemies) {
+    let dx = e.x - player.x;
+    let dy = e.y - player.y;
+    let dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < player.r + e.r) {
+      player.hp -= 20;
+      createParticles(player.x, player.y, "red", 40);
+
+      enemies = enemies.filter(en => en !== e);
+
+      if (player.hp <= 0) {
+        gameOver = true;
+        restartBtn.style.display = "block";
+      }
+      break;
+    }
+  }
+
+  // particles
+  particles.forEach(p => {
+    p.x += p.dx;
+    p.y += p.dy;
+    p.life--;
+  });
+  particles = particles.filter(p => p.life > 0);
+}
+
+// DRAW
+function draw() {
+
+  ctx.fillStyle = "rgba(0,0,0,0.2)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // particles
+  particles.forEach(p => {
+    ctx.globalAlpha = p.life / 30;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  // player
+  ctx.shadowBlur = 30;
+  ctx.shadowColor = "#00ffcc";
+  ctx.fillStyle = "#00ffcc";
+  ctx.beginPath();
+  ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // weapon visual
+  if (player.weapon) {
+    ctx.strokeStyle = player.weapon === "bat" ? "#8B4513" : "#ccc";
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(player.x, player.y);
+    ctx.lineTo(player.x + 35, player.y);
+    ctx.stroke();
+  }
+
+  // enemies
+  enemies.forEach(e => {
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "red";
+    ctx.fillStyle = "#ff3333";
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  });
+
+  // weapons
+  weapons.forEach(w => {
+    ctx.fillStyle = w.type === "bat" ? "#8B4513" : "#ddd";
+    ctx.beginPath();
+    ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // HP BAR
+  ctx.fillStyle = "#550000";
+  ctx.fillRect(20, 20, 220, 20);
+
+  ctx.fillStyle = "#00ff00";
+  ctx.fillRect(20, 20, 220 * (player.hp / player.maxHp), 20);
+
+  ctx.strokeStyle = "white";
+  ctx.strokeRect(20, 20, 220, 20);
+
+  // UI
+  ctx.fillStyle = "white";
+  ctx.fillText("Score: " + score, 20, 60);
+  ctx.fillText("Weapon: " + (player.weapon || "none"), 20, 80);
+  ctx.fillText("SPACE = Attack | SHIFT = Dash", 20, 100);
+
+  if (gameOver) {
+    ctx.font = "50px Arial";
+    ctx.fillText("GAME OVER", 330, 280);
+  }
+}
+
+// LOOP
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+
+// RESTART
+restartBtn.onclick = () => {
+  initGame();
+};
+</script>
+
+</body>
+</html>

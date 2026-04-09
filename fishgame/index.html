@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fish Game</title>
+  <style>
+    body { margin:0; overflow:hidden; background:#001f3f; }
+    canvas { display:block; }
+  </style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+// 🎮 STATE
+let state = "menu";
+
+// 💰 DATA
+let coins = parseInt(localStorage.getItem("coins")) || 0;
+
+// 🎨 SKINS
+const skins = [
+  { color: "cyan", price: 0 },
+  { color: "gold", price: 50 },
+  { color: "lime", price: 75 },
+  { color: "magenta", price: 100 }
+];
+
+let ownedSkins = JSON.parse(localStorage.getItem("skins")) || [0];
+let currentSkin = parseInt(localStorage.getItem("currentSkin")) || 0;
+
+// ⚡ EFFECTS
+let effects = { speed:0, shield:0 };
+
+// 🎮 GAME VARS
+let player, enemies, bullets, powerUps, score;
+
+// 🔤 TEXT RESET
+function resetText(){
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.font = "16px Arial";
+}
+
+// 🔁 INIT GAME
+function initGame(){
+  player = {
+    x: canvas.width/2,
+    y: canvas.height/2,
+    size: 20,
+    speed: 4,
+    hp: 5,
+    angle: 0
+  };
+
+  enemies = [];
+  bullets = [];
+  powerUps = [];
+  score = 0;
+
+  for(let i=0;i<3;i++) spawnEnemy();
+}
+
+// 👾 ENEMY
+function spawnEnemy(){
+  enemies.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    size: 18,
+    speed: 1.5,
+    spawn: Date.now()
+  });
+}
+
+// ⚡ POWER-UP
+function spawnPowerUp(){
+  const types = ["speed","shield"];
+
+  let x,y;
+  do {
+    x = Math.random()*canvas.width;
+    y = Math.random()*canvas.height;
+  } while(Math.hypot(player.x-x,player.y-y)<150);
+
+  powerUps.push({
+    x,y,
+    type: types[Math.floor(Math.random()*types.length)],
+    size: 12
+  });
+}
+
+// 🎮 INPUT
+const keys = {};
+onkeydown = e => keys[e.key]=true;
+onkeyup = e => keys[e.key]=false;
+
+// 💥 SHOOT
+function shoot(){
+  bullets.push({
+    x: player.x,
+    y: player.y,
+    dx: Math.cos(player.angle)*6,
+    dy: Math.sin(player.angle)*6
+  });
+}
+
+// 🔁 UPDATE
+function updateGame(){
+  let speed = player.speed;
+  if (effects.speed>0) speed*=1.7;
+
+  if(keys["ArrowUp"]){ player.y-=speed; player.angle=-Math.PI/2; }
+  if(keys["ArrowDown"]){ player.y+=speed; player.angle=Math.PI/2; }
+  if(keys["ArrowLeft"]){ player.x-=speed; player.angle=Math.PI; }
+  if(keys["ArrowRight"]){ player.x+=speed; player.angle=0; }
+
+  // 🧱 muur
+  player.x = Math.max(player.size, Math.min(canvas.width-player.size, player.x));
+  player.y = Math.max(player.size, Math.min(canvas.height-player.size, player.y));
+
+  if(keys[" "]){
+    shoot();
+    keys[" "] = false;
+  }
+
+  enemies.forEach(e=>{
+    if(Date.now()-e.spawn<800) return;
+
+    let dx=player.x-e.x;
+    let dy=player.y-e.y;
+    let d=Math.hypot(dx,dy);
+
+    e.x += dx/d * e.speed;
+    e.y += dy/d * e.speed;
+
+    if(d < player.size+e.size){
+      if(effects.shield<=0) player.hp--;
+      e.spawn = Date.now();
+    }
+  });
+
+  bullets.forEach((b,bi)=>{
+    b.x+=b.dx; b.y+=b.dy;
+
+    enemies.forEach((e,ei)=>{
+      if(Math.hypot(b.x-e.x,b.y-e.y)<e.size){
+        enemies.splice(ei,1);
+        bullets.splice(bi,1);
+
+        score++;
+        coins++;
+        localStorage.setItem("coins",coins);
+
+        spawnEnemy();
+      }
+    });
+  });
+
+  if(Math.random()<0.005) spawnPowerUp();
+
+  powerUps.forEach((p,i)=>{
+    let d=Math.hypot(player.x-p.x,player.y-p.y);
+    if(d<player.size+p.size){
+      if(p.type==="speed") effects.speed=300;
+      if(p.type==="shield") effects.shield=300;
+      powerUps.splice(i,1);
+    }
+  });
+
+  if(effects.speed>0) effects.speed--;
+  if(effects.shield>0) effects.shield--;
+
+  if(player.hp<=0) state="menu";
+}
+
+// 🎨 FISH
+function drawFish(x,y,size,color,angle){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(angle);
+
+  ctx.fillStyle=color;
+  ctx.beginPath();
+  ctx.ellipse(0,0,size,size*0.6,0,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(-size,0);
+  ctx.lineTo(-size-10,-10);
+  ctx.lineTo(-size-10,10);
+  ctx.fill();
+
+  ctx.fillStyle="white";
+  ctx.beginPath();
+  ctx.arc(size/3,-3,3,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// 🟦 UI
+function drawPanel(x,y,w,h,title){
+  ctx.fillStyle="rgba(0,0,0,0.4)";
+  ctx.fillRect(x,y,w,h);
+
+  ctx.strokeStyle="white";
+  ctx.strokeRect(x,y,w,h);
+
+  ctx.fillStyle="white";
+  ctx.textAlign="left";
+  ctx.textBaseline="middle";
+  ctx.font="18px Arial";
+  ctx.fillText(title,x+10,y+20);
+}
+
+function drawButton(cx,cy,w,h,text){
+  ctx.fillStyle="rgba(255,255,255,0.1)";
+  ctx.fillRect(cx-w/2,cy-h/2,w,h);
+
+  ctx.strokeStyle="white";
+  ctx.strokeRect(cx-w/2,cy-h/2,w,h);
+
+  ctx.fillStyle="white";
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+  ctx.font="16px Arial";
+  ctx.fillText(text,cx,cy);
+}
+
+// 🎨 MENU (ALLEEN SKINS)
+function drawMenu(){
+  let g=ctx.createLinearGradient(0,0,0,canvas.height);
+  g.addColorStop(0,"#003f5c");
+  g.addColorStop(1,"#001f3f");
+  ctx.fillStyle=g;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  resetText();
+
+  ctx.fillStyle="white";
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+  ctx.font="bold 48px Arial";
+  ctx.fillText("FISH GAME",canvas.width/2,80);
+
+  ctx.font="20px Arial";
+  ctx.fillText("Coins: "+coins,canvas.width/2,130);
+
+  drawButton(canvas.width/2,200,220,60,"START");
+
+  // 🎨 SKINS ONLY
+  drawPanel(canvas.width/2 - 130,260,260,260,"SKINS");
+
+  skins.forEach((s,i)=>{
+    let owned = ownedSkins.includes(i) ? "✓ " : "";
+
+    drawButton(
+      canvas.width/2,
+      300 + i*55,
+      200,
+      45,
+      owned + s.color + " ($"+s.price+")"
+    );
+  });
+}
+
+// 🎨 GAME
+function drawGame(){
+  let g=ctx.createLinearGradient(0,0,0,canvas.height);
+  g.addColorStop(0,"#003f5c");
+  g.addColorStop(1,"#001f3f");
+  ctx.fillStyle=g;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  drawFish(player.x,player.y,20,skins[currentSkin].color,player.angle);
+
+  enemies.forEach(e=>drawFish(e.x,e.y,e.size,"red",0));
+
+  bullets.forEach(b=>{
+    ctx.fillStyle="white";
+    ctx.beginPath();
+    ctx.arc(b.x,b.y,4,0,Math.PI*2);
+    ctx.fill();
+  });
+
+  powerUps.forEach(p=>{
+    ctx.fillStyle = p.type==="speed"?"yellow":"blue";
+    ctx.shadowBlur=15;
+    ctx.shadowColor=ctx.fillStyle;
+
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.shadowBlur=0;
+  });
+
+  ctx.fillStyle="white";
+  ctx.textAlign="left";
+  ctx.fillText("Score: "+score,20,30);
+  ctx.fillText("Coins: "+coins,20,60);
+}
+
+// 🖱️ CLICK
+canvas.addEventListener("click", e=>{
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left;
+  const my=e.clientY-rect.top;
+
+  if(state==="menu"){
+
+    // START
+    if(mx>canvas.width/2-110 && mx<canvas.width/2+110 &&
+       my>170 && my<230){
+      state="game";
+      initGame();
+    }
+
+    // SKINS
+    skins.forEach((s,i)=>{
+      let bx = canvas.width/2;
+      let by = 300 + i*55;
+
+      if(mx>bx-100 && mx<bx+100 && my>by-25 && my<by+25){
+        if(ownedSkins.includes(i)){
+          currentSkin=i;
+          localStorage.setItem("currentSkin",i);
+        } else if(coins>=s.price){
+          coins-=s.price;
+          ownedSkins.push(i);
+          localStorage.setItem("skins",JSON.stringify(ownedSkins));
+          localStorage.setItem("coins",coins);
+        }
+      }
+    });
+  }
+});
+
+// 🔄 LOOP
+function loop(){
+  if(state==="game") updateGame();
+
+  if(state==="menu") drawMenu();
+  else drawGame();
+
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+
+</body>
+</html>

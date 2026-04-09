@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Dog Snake</title>
+
+<style>
+body {
+  margin:0;
+  background:#020617;
+  color:white;
+  text-align:center;
+  font-family:Arial;
+}
+canvas {
+  display:block;
+  margin:20px auto;
+  border:2px solid #334155;
+}
+button, select {
+  margin:5px;
+  padding:10px;
+  background:#1e293b;
+  color:white;
+  border:none;
+  border-radius:6px;
+}
+#shop, #gameOver { display:none; }
+</style>
+</head>
+
+<body>
+
+<h1>🐶 Dog Snake</h1>
+
+<div id="menu">
+<p>Coins: <span id="coinsUI">0</span></p>
+<p>Highscore: <span id="highUI">0</span></p>
+
+<h3>Missions</h3>
+<div id="missionsUI"></div>
+
+<p>Dog:</p><select id="dogSkin"></select>
+<p>Bone:</p><select id="boneSkin"></select>
+<p>BG:</p><select id="bgSkin"></select>
+
+<button onclick="startGame()">Start</button>
+<button onclick="openShop()">Shop</button>
+</div>
+
+<div id="shop">
+<h2>Shop</h2>
+<div id="shopItems"></div>
+<button onclick="closeShop()">Back</button>
+</div>
+
+<div id="gameOver">
+<h2>Game Over</h2>
+<p id="final"></p>
+<button onclick="restart()">Restart</button>
+</div>
+
+<canvas id="game" width="400" height="400"></canvas>
+
+<script>
+// ===== SAVE =====
+let coins = +localStorage.getItem("coins") || 0;
+let high = +localStorage.getItem("high") || 0;
+
+let ownedDogs = JSON.parse(localStorage.getItem("dogs")) || ["🐶"];
+let ownedBones = JSON.parse(localStorage.getItem("bones")) || ["🦴"];
+let ownedBGs = JSON.parse(localStorage.getItem("bgs")) || ["dark"];
+let ownedPowers = JSON.parse(localStorage.getItem("powers")) || [];
+
+// ===== POOLS =====
+const dogPool = ["🐉","👻","🤖","👽"];
+const bonePool = ["🍕","🍩","🍉"];
+const bgPool = ["blue","green","purple"];
+const powerPool = ["bazooka","shield","slow"];
+
+const backgrounds = {
+  dark:"#020617",
+  blue:"#0ea5e9",
+  green:"#065f46",
+  purple:"#4c1d95"
+};
+
+// ===== GAME =====
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let dog, vel, bones, skulls, bullets;
+let ammo, shield, slowTimer;
+let score, speed, baseSpeed;
+let loop;
+
+// ===== MISSIONS =====
+let missions;
+
+function newMissions(){
+  missions = [
+    {type:"eat", goal:5, progress:0, reward:10, done:false},
+    {type:"coins", goal:20, progress:0, reward:15, done:false}
+  ];
+  renderMissions();
+}
+
+// ===== INPUT =====
+document.addEventListener("keydown", e=>{
+  if(e.key==="ArrowUp" && vel.y!==1) vel={x:0,y:-1};
+  if(e.key==="ArrowDown" && vel.y!==-1) vel={x:0,y:1};
+  if(e.key==="ArrowLeft" && vel.x!==1) vel={x:-1,y:0};
+  if(e.key==="ArrowRight" && vel.x!==-1) vel={x:1,y:0};
+
+  if(e.code==="Space" && ammo>0){
+    bullets.push({x:dog[0].x,y:dog[0].y,dx:vel.x,dy:vel.y});
+    ammo--;
+  }
+});
+
+// ===== START =====
+function startGame(){
+  dog=[{x:10,y:10}];
+  vel={x:1,y:0};
+
+  bones=[randPos()];
+  skulls=[randPos(), randPos()];
+  bullets=[];
+
+  score=0;
+
+  baseSpeed=120;
+  speed=baseSpeed;
+
+  ammo=0;
+  shield=false;
+  slowTimer=0;
+
+  if(ownedPowers.includes("bazooka")) ammo=2;
+  if(ownedPowers.includes("shield")) shield=true;
+  if(ownedPowers.includes("slow")) slowTimer=200;
+
+  newMissions();
+
+  clearInterval(loop);
+  loop=setInterval(gameLoop, speed);
+}
+
+// ===== LOOP =====
+function gameLoop(){
+  update();
+  draw();
+}
+
+// ===== UPDATE =====
+function update(){
+  let head = {x:dog[0].x+vel.x, y:dog[0].y+vel.y};
+
+  // wall
+  if(head.x<0||head.y<0||head.x>=20||head.y>=20){
+    if(shield){shield=false;}
+    else return gameOver();
+  }
+
+  // self
+  for(let p of dog){
+    if(p.x===head.x && p.y===head.y){
+      if(shield){shield=false;}
+      else return gameOver();
+    }
+  }
+
+  dog.unshift(head);
+
+  let ate=false;
+
+  bones.forEach((b,i)=>{
+    if(head.x===b.x && head.y===b.y){
+      score++;
+      coins++;
+      ate=true;
+
+      bones[i]=randPos();
+
+      updateMission("eat",1);
+      updateMission("coins",1);
+
+      baseSpeed = Math.max(60, baseSpeed-2);
+
+      clearInterval(loop);
+      loop=setInterval(gameLoop, baseSpeed);
+    }
+  });
+
+  if(!ate) dog.pop();
+
+  // skulls
+  skulls.forEach((s,i)=>{
+    if(head.x===s.x && head.y===s.y){
+      if(shield){
+        shield=false;
+        skulls[i]=randPos();
+      } else gameOver();
+    }
+  });
+
+  // bullets
+  bullets.forEach((b,i)=>{
+    b.x+=b.dx; b.y+=b.dy;
+
+    if(b.x<0||b.y<0||b.x>=20||b.y>=20){
+      bullets.splice(i,1);
+      return;
+    }
+
+    skulls.forEach((s,j)=>{
+      if(b.x===s.x && b.y===s.y){
+        skulls[j]=randPos();
+        bullets.splice(i,1);
+      }
+    });
+  });
+
+  // slow
+  if(slowTimer>0){
+    slowTimer--;
+  }
+}
+
+// ===== DRAW =====
+function draw(){
+  ctx.fillStyle = backgrounds[bgSkin.value];
+  ctx.fillRect(0,0,400,400);
+
+  ctx.font="20px Arial";
+
+  dog.forEach(p=>ctx.fillText(dogSkin.value, p.x*20, p.y*20));
+  bones.forEach(b=>ctx.fillText(boneSkin.value, b.x*20, b.y*20));
+  skulls.forEach(s=>ctx.fillText("💀", s.x*20, s.y*20));
+  bullets.forEach(b=>ctx.fillText("🔥", b.x*20, b.y*20));
+
+  ctx.fillText("Score:"+score,10,20);
+  ctx.fillText("Coins:"+coins,10,40);
+  ctx.fillText("Ammo:"+ammo,10,60);
+}
+
+// ===== MISSIONS =====
+function updateMission(type, amount){
+  missions.forEach(m=>{
+    if(m.type===type && !m.done){
+      m.progress+=amount;
+      if(m.progress>=m.goal){
+        m.done=true;
+        coins+=m.reward;
+      }
+    }
+  });
+  renderMissions();
+}
+
+function renderMissions(){
+  missionsUI.innerHTML="";
+  missions.forEach(m=>{
+    let d=document.createElement("div");
+    d.innerText=`${m.type}: ${m.progress}/${m.goal} ${m.done?"✅":""}`;
+    missionsUI.appendChild(d);
+  });
+}
+
+// ===== GAME OVER =====
+function gameOver(){
+  clearInterval(loop);
+
+  if(score>high){
+    high=score;
+    localStorage.setItem("high",high);
+  }
+
+  final.innerText="Score: "+score;
+  gameOver.style.display="block";
+
+  save();
+}
+
+// ===== SHOP =====
+function renderShop(){
+  shopItems.innerHTML="";
+
+  function add(pool, owned, price){
+    pool.forEach(item=>{
+      let b=document.createElement("button");
+
+      if(owned.includes(item)){
+        b.innerText=item+" ✅";
+        b.disabled=true;
+      } else {
+        b.innerText=item+" ("+price+")";
+        b.onclick=()=>{
+          if(coins>=price){
+            coins-=price;
+            owned.push(item);
+            save();
+            renderShop();
+            populate();
+          }
+        };
+      }
+
+      shopItems.appendChild(b);
+    });
+  }
+
+  add(dogPool, ownedDogs, 20);
+  add(bonePool, ownedBones, 15);
+  add(bgPool, ownedBGs, 25);
+  add(powerPool, ownedPowers, 30);
+}
+
+// ===== HELPERS =====
+function rand(){return Math.floor(Math.random()*20);}
+function randPos(){return {x:rand(),y:rand()};}
+
+// ===== UI =====
+function populate(){
+  dogSkin.innerHTML="";
+  ownedDogs.forEach(s=>{
+    let o=document.createElement("option");
+    o.value=s;o.text=s;
+    dogSkin.add(o);
+  });
+
+  boneSkin.innerHTML="";
+  ownedBones.forEach(s=>{
+    let o=document.createElement("option");
+    o.value=s;o.text=s;
+    boneSkin.add(o);
+  });
+
+  bgSkin.innerHTML="";
+  ownedBGs.forEach(s=>{
+    let o=document.createElement("option");
+    o.value=s;o.text=s;
+    bgSkin.add(o);
+  });
+}
+
+function updateUI(){
+  coinsUI.innerText=coins;
+  highUI.innerText=high;
+}
+
+function save(){
+  localStorage.setItem("coins",coins);
+  localStorage.setItem("dogs",JSON.stringify(ownedDogs));
+  localStorage.setItem("bones",JSON.stringify(ownedBones));
+  localStorage.setItem("bgs",JSON.stringify(ownedBGs));
+  localStorage.setItem("powers",JSON.stringify(ownedPowers));
+  updateUI();
+}
+
+// ===== NAV =====
+function openShop(){menu.style.display="none";shop.style.display="block";renderShop();}
+function closeShop(){shop.style.display="none";menu.style.display="block";}
+function restart(){gameOver.style.display="none";startGame();}
+
+// INIT
+populate();
+updateUI();
+newMissions();
+
+</script>
+
+</body>
+</html>
