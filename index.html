@@ -2,148 +2,131 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<title>Mijn Games</title>
+<title>StormPlay 🎮</title>
+
+<meta name="description" content="StormPlay - Speel gratis online games!">
 
 <style>
 body {
   margin: 0;
   font-family: Arial;
-  background: linear-gradient(135deg, #020617, #0f172a);
+  background: linear-gradient(135deg, #0f172a, #1e293b);
   color: white;
   text-align: center;
-  transition: 0.5s;
 }
 
 h1 {
-  margin: 20px;
-  text-shadow: 0 0 10px cyan;
+  margin-top: 20px;
+  font-size: 40px;
 }
 
+/* 🔍 zoekbalk */
 #search {
-  padding: 12px;
+  margin-top: 20px;
+  padding: 10px;
   width: 250px;
   border-radius: 10px;
   border: none;
-  margin-bottom: 20px;
+  font-size: 16px;
 }
 
-/* 🎨 KLEUR KNOPPEN */
-.colors {
-  margin-bottom: 20px;
-}
-
-.colorBtn {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: none;
-  margin: 5px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.colorBtn:hover {
-  transform: scale(1.2);
-}
-
-/* GAMES */
-.container {
+/* 🎮 menu */
+.menu {
   display: flex;
   justify-content: center;
   gap: 25px;
+  margin-top: 40px;
   flex-wrap: wrap;
 }
 
 .game {
-  width: 220px;
-  padding: 20px;
-  border-radius: 15px;
-  background: #1e293b;
+  width: 200px;
+  border-radius: 20px;
+  overflow: hidden;
   cursor: pointer;
   transition: 0.3s;
+  background: #1e293b;
+  text-decoration: none;
+  color: white;
 }
 
 .game:hover {
-  transform: scale(1.08);
-  box-shadow: 0 0 20px cyan;
+  transform: scale(1.1);
+  box-shadow: 0 0 20px #00ffff;
 }
 
-.icon {
-  font-size: 50px;
+.game img {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+}
+
+.game p {
+  margin: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🎮 Mijn Games</h1>
+<h1>⚡ StormPlay</h1>
+<p>Speel. Win. Herhaal.</p>
 
-<!-- 🔍 ZOEK -->
-<input type="text" id="search" placeholder="Zoek game..." onkeyup="searchGame()">
+<!-- 🔍 zoekbalk -->
+<input type="text" id="search" placeholder="Zoek een game...">
 
-<!-- 🎨 KLEUR KNOPPEN -->
-<div class="colors">
-  <button class="colorBtn" style="background:#020617" onclick="setBg('#020617','#0f172a')"></button>
-  <button class="colorBtn" style="background:#1e3a8a" onclick="setBg('#1e3a8a','#0ea5e9')"></button>
-  <button class="colorBtn" style="background:#14532d" onclick="setBg('#14532d','#22c55e')"></button>
-  <button class="colorBtn" style="background:#7f1d1d" onclick="setBg('#7f1d1d','#ef4444')"></button>
-  <button class="colorBtn" style="background:#581c87" onclick="setBg('#581c87','#a855f7')"></button>
-</div>
+<div class="menu" id="menu">
 
-<div class="container">
+  <a href="bunny/index.html" class="game">
+    <img src="https://picsum.photos/300/200?1">
+    <p>Bunny Knight</p>
+  </a>
 
-  <div class="game" onclick="openGame('dogsnake')">
-    <div class="icon">🐶</div>
-    <h2>Dog Snake</h2>
-  </div>
+  <a href="boxgame/index.html" class="game">
+    <img src="https://picsum.photos/300/200?2">
+    <p>Box Game</p>
+  </a>
 
-  <div class="game" onclick="openGame('fishscore')">
-    <div class="icon">🐟</div>
-    <h2>Fish Score</h2>
-  </div>
+  <a href="fishscore/index.html" class="game">
+    <img src="https://picsum.photos/300/200?3">
+    <p>Fish Score</p>
+  </a>
 
-  <div class="game" onclick="openGame('fishgame')">
-    <div class="icon">🎯</div>
-    <h2>Fish Game</h2>
-  </div>
+  <a href="circle/index.html" class="game">
+    <img src="https://picsum.photos/300/200?4">
+    <p>Circle Game</p>
+  </a>
 
-  <div class="game" onclick="openGame('alchemy')">
-    <div class="icon">🧪</div>
-    <h2>Alchemy Sandbox</h2>
-  </div>
+  <a href="shooter/index.html" class="game">
+    <img src="https://picsum.photos/300/200?5">
+    <p>Shooter</p>
+  </a>
 
-  <div class="game" onclick="openGame('boxgame')">
-    <div class="icon">📦</div>
-    <h2>Box Game</h2>
-  </div>
-
-  <div class="game" onclick="openGame('bunny')">
-    <div class="icon">🐰</div>
-    <h2>Bunny Knight</h2>
-  </div>
+  <a href="runner/index.html" class="game">
+    <img src="https://picsum.photos/300/200?6">
+    <p>Runner</p>
+  </a>
 
 </div>
 
 <script>
-function openGame(game) {
-  window.location.href = "./" + game + "/index.html";
-}
+// 🔍 zoek functie
+const search = document.getElementById("search");
+const games = document.querySelectorAll(".game");
 
-// 🔍 zoeken
-function searchGame() {
-  let input = document.getElementById("search").value.toLowerCase();
-  let games = document.querySelectorAll(".game");
+search.addEventListener("input", () => {
+  let value = search.value.toLowerCase();
 
   games.forEach(game => {
     let text = game.innerText.toLowerCase();
-    game.style.display = text.includes(input) ? "block" : "none";
-  });
-}
 
-// 🎨 achtergrond veranderen
-function setBg(color1, color2) {
-  document.body.style.background = `linear-gradient(135deg, ${color1}, ${color2})`;
-}
+    if (text.includes(value)) {
+      game.style.display = "block";
+    } else {
+      game.style.display = "none";
+    }
+  });
+});
 </script>
 
 </body>
