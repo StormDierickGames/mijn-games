@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>AI Alchemy Sandbox</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+  text-align: center;
+}
+
+h1 {
+  margin-top: 20px;
+}
+
+#elements {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 20px;
+}
+
+.element {
+  padding: 10px 15px;
+  margin: 5px;
+  background: #1e293b;
+  border-radius: 10px;
+  cursor: grab;
+}
+
+.element:hover {
+  background: #334155;
+}
+
+#dropzone {
+  margin: 30px auto;
+  width: 300px;
+  height: 150px;
+  border: 2px dashed #475569;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#result {
+  font-size: 22px;
+  margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🧪 AI Alchemy Sandbox</h1>
+
+<div id="elements"></div>
+
+<div id="dropzone">Sleep 2 elementen hierheen</div>
+
+<div id="result"></div>
+
+<script>
+// 🔑 API KEY (optioneel)
+const API_KEY = "";
+
+// 📦 LOAD SAVE
+let elements = JSON.parse(localStorage.getItem("alchemyElements")) || [
+  "vuur","water","aarde","lucht"
+];
+
+let selected = [];
+
+// 💾 SAVE
+function saveGame() {
+  localStorage.setItem("alchemyElements", JSON.stringify(elements));
+}
+
+// 🧠 LOGISCHE RECIPES
+const recipes = {
+  "water+aarde": "plant",
+  "aarde+water": "plant",
+
+  "water+vuur": "stoom",
+  "vuur+water": "stoom",
+
+  "aarde+vuur": "lava",
+  "vuur+aarde": "lava",
+
+  "lucht+water": "regen",
+  "water+lucht": "regen",
+
+  "plant+water": "boom",
+  "water+plant": "boom",
+
+  "plant+vuur": "as",
+  "vuur+plant": "as",
+
+  "boom+vuur": "houtskool",
+  "vuur+boom": "houtskool",
+
+  "lucht+aarde": "stof",
+  "aarde+lucht": "stof",
+
+  "steen+vuur": "lava",
+  "vuur+steen": "lava"
+};
+
+// 🎨 RENDER
+function render() {
+  const container = document.getElementById("elements");
+  container.innerHTML = "";
+
+  elements.forEach(el => {
+    const div = document.createElement("div");
+    div.className = "element";
+    div.innerText = el;
+    div.draggable = true;
+
+    div.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text", el);
+    });
+
+    container.appendChild(div);
+  });
+}
+
+// 📦 DROPZONE
+const dropzone = document.getElementById("dropzone");
+
+dropzone.addEventListener("dragover", e => e.preventDefault());
+
+dropzone.addEventListener("drop", async e => {
+  e.preventDefault();
+  const el = e.dataTransfer.getData("text");
+
+  if (selected.length < 2) {
+    selected.push(el);
+  }
+
+  dropzone.innerText = selected.join(" + ");
+
+  if (selected.length === 2) {
+    const result = await combine(selected[0], selected[1]);
+
+    document.getElementById("result").innerText = "✨ " + result;
+
+    if (!elements.includes(result)) {
+      elements.push(result);
+      saveGame(); // 💾 opslaan
+      render();
+    }
+
+    selected = [];
+    dropzone.innerText = "Sleep 2 elementen hierheen";
+  }
+});
+
+// 🧠 FALLBACK
+function fallback(a, b) {
+  return `${a}-${b}`;
+}
+
+// 🤖 COMBINE (LOGICA → AI → FALLBACK)
+async function combine(a, b) {
+  const key = `${a}+${b}`;
+
+  // 1️⃣ vaste logica
+  if (recipes[key]) {
+    return recipes[key];
+  }
+
+  // 2️⃣ AI (optioneel)
+  if (API_KEY) {
+    try {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + API_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "user",
+              content: `Combine these into ONE logical element: ${a} + ${b}`
+            }
+          ]
+        })
+      });
+
+      const data = await res.json();
+
+      let text = data.choices[0].message.content.trim().toLowerCase();
+      text = text.replace(/[^a-z0-9 ]/gi, "");
+
+      if (text) return text;
+
+    } catch (err) {
+      console.log("AI error");
+    }
+  }
+
+  // 3️⃣ fallback
+  return fallback(a, b);
+}
+
+// 🚀 START
+render();
+</script>
+
+</body>
+</html>
