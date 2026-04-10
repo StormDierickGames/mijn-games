@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Maze Game</title>
+
+<style>
+body {
+  text-align:center;
+  font-family:Arial;
+  background:#111;
+  color:white;
+}
+
+#menu {
+  position: relative;
+  z-index: 10;
+}
+
+canvas {
+  background:#eee;
+  margin-top:20px;
+  border:3px solid black;
+}
+
+button, input {
+  padding:10px;
+  margin:5px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🧩 Maze Game</h1>
+
+<div id="menu">
+  <input id="levelInput" type="number" placeholder="Level...">
+  <button id="startBtn">Start</button><br>
+
+  <button id="randomBtn">🎲 Random</button>
+  <button id="dailyBtn">📅 Daily</button>
+</div>
+
+<p id="info"></p>
+<button id="backBtn" style="display:none;">⬅ Menu</button>
+
+<canvas id="gameCanvas" width="500" height="500" style="display:none;"></canvas>
+
+<script>
+// ================= SETUP =================
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+let level = 1;
+let unlockedLevel = parseInt(localStorage.getItem("mazeUnlocked")) || 1;
+
+let maze, player, goal, tileSize;
+
+// ================= EVENTS =================
+document.getElementById("startBtn").onclick = () => {
+  let val = parseInt(document.getElementById("levelInput").value);
+  if(val >= 1) startLevel(val);
+};
+
+document.getElementById("randomBtn").onclick = randomLevel;
+document.getElementById("dailyBtn").onclick = startDaily;
+
+// ================= RANDOM =================
+function randomLevel(){
+  let random = Math.floor(Math.random()*500000)+1;
+  startLevel(random);
+}
+
+// ================= DAILY =================
+function getDailySeed(){
+  let d=new Date();
+  return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+}
+
+function startDaily(){
+  showGame();
+
+  let seed=getDailySeed();
+
+  maze=generateMaze(25,seed);
+
+  tileSize=canvas.width/25;
+
+  player={x:1,y:1};
+  goal={x:23,y:23};
+
+  document.getElementById("info").innerText="📅 Daily";
+
+  draw();
+}
+
+// ================= START LEVEL =================
+function startLevel(lvl){
+  level=lvl;
+
+  showGame();
+
+  let size = 9 + Math.floor(level * 0.2);
+  if(size>41) size=41;
+  if(size%2===0) size++;
+
+  maze = generateMaze(size, level);
+
+  tileSize = canvas.width/size;
+
+  player={x:1,y:1};
+  goal={x:size-2,y:size-2};
+
+  document.getElementById("info").innerText="Level: "+level;
+
+  draw();
+}
+
+// ================= SHOW GAME =================
+function showGame(){
+  document.getElementById("menu").style.display="none";
+  canvas.style.display="block";
+  document.getElementById("backBtn").style.display="inline-block";
+}
+
+// ================= SEEDED RANDOM =================
+function seededRandom(seed){
+  let x=Math.sin(seed)*10000;
+  return x-Math.floor(x);
+}
+
+// ================= MAZE =================
+function generateMaze(size,seed){
+  let maze=Array.from({length:size},()=>Array(size).fill(1));
+
+  let stack=[{x:1,y:1}];
+  maze[1][1]=0;
+
+  while(stack.length){
+    let {x,y}=stack[stack.length-1];
+
+    let dirs=[[0,-2],[0,2],[-2,0],[2,0]];
+    dirs.sort(()=>seededRandom(seed++)-0.5);
+
+    let moved=false;
+
+    for(let [dx,dy] of dirs){
+      let nx=x+dx, ny=y+dy;
+
+      if(ny>0 && ny<size-1 && nx>0 && nx<size-1 && maze[ny][nx]===1){
+        maze[ny][nx]=0;
+        maze[y+dy/2][x+dx/2]=0;
+        stack.push({x:nx,y:ny});
+        moved=true;
+        break;
+      }
+    }
+
+    if(!moved) stack.pop();
+  }
+
+  return maze;
+}
+
+// ================= MOVEMENT =================
+document.addEventListener("keydown",e=>{
+  let d={
+    ArrowUp:[0,-1],
+    ArrowDown:[0,1],
+    ArrowLeft:[-1,0],
+    ArrowRight:[1,0]
+  }[e.key];
+
+  if(!d) return;
+
+  let nx=player.x+d[0], ny=player.y+d[1];
+
+  if(maze[ny] && maze[ny][nx]===0){
+    player.x=nx;
+    player.y=ny;
+  }
+
+  if(player.x===goal.x && player.y===goal.y){
+    alert("🎉 Level gehaald!");
+    startLevel(level+1);
+  }
+
+  draw();
+});
+
+// ================= DRAW =================
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  for(let y=0;y<maze.length;y++){
+    for(let x=0;x<maze.length;x++){
+      if(maze[y][x]===1){
+        ctx.fillStyle="#000";
+        ctx.fillRect(x*tileSize,y*tileSize,tileSize,tileSize);
+      }
+    }
+  }
+
+  ctx.fillStyle="green";
+  ctx.fillRect(goal.x*tileSize,goal.y*tileSize,tileSize,tileSize);
+
+  ctx.fillStyle="blue";
+  ctx.fillRect(player.x*tileSize,player.y*tileSize,tileSize,tileSize);
+}
+
+// ================= MENU =================
+function backToMenu(){
+  canvas.style.display="none";
+  document.getElementById("menu").style.display="block";
+  document.getElementById("backBtn").style.display="none";
+}
+
+document.getElementById("backBtn").onclick = backToMenu;
+
+</script>
+
+</body>
+</html>
