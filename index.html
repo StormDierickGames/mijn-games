@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>⚡ StormPlay 🎮</title>
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f172a">
-
 <style>
 body {
   margin: 0;
@@ -104,11 +101,6 @@ search.addEventListener("input", () => {
     game.style.display = text.includes(value) ? "block" : "none";
   });
 });
-
-// 📱 PWA (app)
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js");
-}
 </script>
 
 </body>
