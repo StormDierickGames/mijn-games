@@ -9,7 +9,7 @@
 body {
   margin: 0;
   font-family: Arial;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
+  background: #0f172a;
   color: white;
   text-align: center;
 }
@@ -18,13 +18,29 @@ h1 {
   margin-top: 20px;
 }
 
+/* zoekbalk */
 #search {
-  margin-top: 15px;
-  padding: 12px;
+  margin-top: 10px;
+  padding: 10px;
   width: 80%;
   max-width: 300px;
   border-radius: 10px;
   border: none;
+}
+
+/* muziek */
+.music {
+  margin-top: 15px;
+}
+
+/* knoppen */
+button {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
 }
 
 /* menu */
@@ -36,31 +52,12 @@ h1 {
 }
 
 .game {
-  padding: 25px 10px;
-  border-radius: 20px;
+  padding: 20px;
+  border-radius: 15px;
   background: #1e293b;
   text-decoration: none;
   color: white;
   font-size: 18px;
-  transition: 0.2s;
-}
-
-.game:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 15px #00ffff;
-}
-
-/* muziek box */
-.music {
-  margin-top: 15px;
-}
-
-button {
-  padding: 10px;
-  margin: 5px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
 }
 </style>
 </head>
@@ -74,54 +71,53 @@ button {
 
 <!-- 🎵 MUZIEK -->
 <div class="music">
-  <p>🎵 Kies muziek:</p>
-  <button onclick="playMusic('chill')">🌙 Chill</button>
-  <button onclick="playMusic('game')">🔥 Game</button>
-  <button onclick="playMusic('lofi')">🎧 Lofi</button>
+  <p>🎵 Muziek:</p>
+  <button onclick="playMusic(1)">🌙 Chill</button>
+  <button onclick="playMusic(2)">🔥 Game</button>
+  <button onclick="playMusic(3)">🎧 Lofi</button>
   <button onclick="stopMusic()">⛔ Stop</button>
 </div>
 
+<!-- 🎮 GAMES -->
 <div class="menu">
 
-  <a href="bunny/index.html" class="game">🐰 Bunny Knight</a>
-  <a href="boxgame/index.html" class="game">📦 Box Game</a>
-  <a href="fishscore/index.html" class="game">🐟 Fish Score</a>
-  <a href="dogsnake/index.html" class="game">🐍 DogSnake</a>
+  <a href="bunny/index.html" class="game">🐰 Bunny</a>
+  <a href="boxgame/index.html" class="game">📦 Box</a>
+  <a href="fishscore/index.html" class="game">🐟 Fish</a>
+  <a href="dogsnake/index.html" class="game">🐍 Snake</a>
   <a href="sandbox/index.html" class="game">🧱 Sandbox</a>
-  <a href="puppy/index.html" class="game">🐶 Puppy Clicker</a>
-  <a href="maze/index.html" class="game">🧩 Maze Game</a>
-  <a href="eiland/index.html" class="game">🌴 Eiland Simulator</a>
+  <a href="puppy/index.html" class="game">🐶 Puppy</a>
+  <a href="maze/index.html" class="game">🧩 Maze</a>
+  <a href="eiland/index.html" class="game">🌴 Eiland</a>
 
 </div>
 
-<!-- AUDIO -->
-<audio id="bgMusic" loop></audio>
+<audio id="music" loop></audio>
 
 <script>
-// 🔍 zoekbalk
+// zoek
 const search = document.getElementById("search");
 const games = document.querySelectorAll(".game");
 
 search.addEventListener("input", () => {
-  let value = search.value.toLowerCase();
+  let val = search.value.toLowerCase();
 
-  games.forEach(game => {
-    let text = game.innerText.toLowerCase();
-    game.style.display = text.includes(value) ? "block" : "none";
+  games.forEach(g => {
+    g.style.display = g.innerText.toLowerCase().includes(val) ? "block" : "none";
   });
 });
 
-// 🎵 muziek systeem
-const music = document.getElementById("bgMusic");
+// muziek
+const music = document.getElementById("music");
 
-function playMusic(type){
-  if(type === "chill"){
+function playMusic(n){
+  if(n === 1){
     music.src = "https://cdn.pixabay.com/download/audio/2022/03/15/audio_5f1c7c0b47.mp3";
   }
-  if(type === "game"){
+  if(n === 2){
     music.src = "https://cdn.pixabay.com/download/audio/2022/03/10/audio_0c2a5b6f28.mp3";
   }
-  if(type === "lofi"){
+  if(n === 3){
     music.src = "https://cdn.pixabay.com/download/audio/2022/10/25/audio_946e6c1c6b.mp3";
   }
 
