@@ -15,8 +15,8 @@ body {
 }
 
 #search {
-  margin-top: 10px;
-  padding: 12px;
+  margin: 10px;
+  padding: 10px;
   width: 80%;
   max-width: 300px;
   border-radius: 10px;
@@ -38,8 +38,17 @@ body {
   color: white;
 }
 
-.colors {
-  margin-top: 15px;
+/* cards */
+#cards {
+  margin-top: 20px;
+}
+
+.card {
+  display: inline-block;
+  padding: 15px;
+  margin: 5px;
+  border-radius: 10px;
+  background: #334155;
 }
 
 button {
@@ -58,14 +67,6 @@ button {
 
 <input id="search" placeholder="Zoek game...">
 
-<!-- 🎨 kleuren -->
-<div class="colors">
-  <button onclick="setBg('#0f172a')">🌑</button>
-  <button onclick="setBg('#1e3a8a')">🔵</button>
-  <button onclick="setBg('#065f46')">🟢</button>
-  <button onclick="setBg('#7c2d12')">🟠</button>
-</div>
-
 <!-- 🎮 GAMES -->
 <div class="menu">
   <a href="bunny/index.html" class="game">🐰 Bunny</a>
@@ -78,22 +79,15 @@ button {
   <a href="eiland/index.html" class="game">🌴 Eiland</a>
 </div>
 
-<!-- 💬 COMMENTS -->
-<h2>💬 Comments</h2>
+<!-- 🎴 CARD SYSTEM -->
+<h2>🎴 Jouw Cards</h2>
 
-<script src="https://giscus.app/client.js"
-        data-repo="StormDierickGames/mijn-games"
-        data-repo-id="PASTE_HIER"
-        data-category="General"
-        data-category-id="PASTE_HIER"
-        data-mapping="pathname"
-        data-theme="dark"
-        crossorigin="anonymous"
-        async>
-</script>
+<button onclick="openPack()">🎁 Open Pack</button>
+
+<div id="cards"></div>
 
 <script>
-// zoek
+// 🔍 search
 const search = document.getElementById("search");
 const games = document.querySelectorAll(".game");
 
@@ -104,16 +98,57 @@ search.oninput = () => {
   });
 };
 
-// achtergrond
-function setBg(color){
-  document.body.style.background = color;
-  localStorage.setItem("bg", color);
+// 🎴 kaarten lijst
+const allCards = [
+  "🐰 Bunny Master",
+  "📦 Box King",
+  "🐟 Fish Pro",
+  "🐍 Snake God",
+  "🧱 Builder",
+  "🐶 Puppy Boss",
+  "🧩 Maze Brain",
+  "🌴 Island Creator",
+  "🔥 Legendary Player"
+];
+
+// 💾 load save
+let myCards = JSON.parse(localStorage.getItem("cards")) || [];
+
+// 🎁 open pack
+function openPack(){
+  let random = allCards[Math.floor(Math.random() * allCards.length)];
+
+  if(!myCards.includes(random)){
+    myCards.push(random);
+    alert("🎉 Nieuwe kaart: " + random);
+  } else {
+    alert("😅 Duplicate kaart!");
+  }
+
+  save();
+  renderCards();
 }
 
-window.onload = () => {
-  let bg = localStorage.getItem("bg");
-  if(bg) document.body.style.background = bg;
-};
+// 💾 save
+function save(){
+  localStorage.setItem("cards", JSON.stringify(myCards));
+}
+
+// 🎨 render
+function renderCards(){
+  const container = document.getElementById("cards");
+  container.innerHTML = "";
+
+  myCards.forEach(card => {
+    let div = document.createElement("div");
+    div.className = "card";
+    div.innerText = card;
+    container.appendChild(div);
+  });
+}
+
+// start
+renderCards();
 </script>
 
 </body>
