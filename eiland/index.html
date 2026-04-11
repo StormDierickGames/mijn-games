@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Eiland Simulator ULTRA 🌴</title>
+  <style>
+    body { font-family: Arial; }
+    canvas {
+      border: 2px solid black;
+      background: #87CEEB;
+    }
+    button { margin: 5px; }
+  </style>
+</head>
+<body>
+
+<h2>Eiland Simulator ULTRA 🌴</h2>
+
+<p>
+1 🌊 water | 2 🟡 zand | 3 🟢 gras | 4 ⚪ steen <br>
+5 🌴 boom | 6 🏠 huis <br>
+7 👤 mens | 8 🐾 dier | 9 🐟 vis | 0 🐦 vogel
+</p>
+
+<canvas id="game" width="800" height="600"></canvas>
+
+<br>
+
+<button onclick="saveGame(1)">💾 Save 1</button>
+<button onclick="loadGame(1)">📂 Load 1</button>
+
+<button onclick="saveGame(2)">💾 Save 2</button>
+<button onclick="loadGame(2)">📂 Load 2</button>
+
+<button onclick="saveGame(3)">💾 Save 3</button>
+<button onclick="loadGame(3)">📂 Load 3</button>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+ctx.imageSmoothingEnabled = false;
+
+const TILE_SIZE = 40;
+const COLS = canvas.width / TILE_SIZE;
+const ROWS = canvas.height / TILE_SIZE;
+
+let map = [];
+let entities = [];
+
+function createMap() {
+  map = [];
+  for (let y = 0; y < ROWS; y++) {
+    map[y] = [];
+    for (let x = 0; x < COLS; x++) {
+      map[y][x] = { ground: "water", object: null };
+    }
+  }
+}
+createMap();
+
+let currentType = "grass";
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "1") currentType = "water";
+  if (e.key === "2") currentType = "sand";
+  if (e.key === "3") currentType = "grass";
+  if (e.key === "4") currentType = "stone";
+  if (e.key === "5") currentType = "tree";
+  if (e.key === "6") currentType = "house";
+  if (e.key === "7") currentType = "human";
+  if (e.key === "8") currentType = "animal";
+  if (e.key === "9") currentType = "fish";
+  if (e.key === "0") currentType = "bird";
+});
+
+canvas.addEventListener("click", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left) / TILE_SIZE);
+  const y = Math.floor((e.clientY - rect.top) / TILE_SIZE);
+
+  if (["human","animal","fish","bird"].includes(currentType)) {
+    entities.push({ x, y, type: currentType, dx: 0, dy: 0 });
+  } 
+  else if (["tree","house"].includes(currentType)) {
+    if (map[y][x].ground !== "water") {
+      map[y][x].object = currentType;
+    }
+  } 
+  else {
+    map[y][x].ground = currentType;
+    map[y][x].object = null;
+  }
+});
+
+function updateEntities() {
+  entities.forEach(e => {
+    if (Math.random() < 0.03) {
+      e.dx = Math.floor(Math.random()*3)-1;
+      e.dy = Math.floor(Math.random()*3)-1;
+    }
+
+    let nx = e.x + e.dx;
+    let ny = e.y + e.dy;
+
+    if (nx>=0 && nx<COLS && ny>=0 && ny<ROWS) {
+      let tile = map[ny][nx];
+
+      if (e.type === "human" && tile.ground !== "water") {
+        e.x = nx; e.y = ny;
+      }
+      if (e.type === "animal" && tile.ground !== "water") {
+        e.x = nx; e.y = ny;
+      }
+      if (e.type === "fish" && tile.ground === "water") {
+        e.x = nx; e.y = ny;
+      }
+      if (e.type === "bird") {
+        e.x = nx; e.y = ny;
+      }
+    }
+  });
+}
+
+function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  for (let y=0;y<ROWS;y++){
+    for (let x=0;x<COLS;x++){
+      let t = map[y][x];
+
+      if (t.ground==="water") ctx.fillStyle="#2da6ff";
+      if (t.ground==="sand") ctx.fillStyle="#f7e4a0";
+      if (t.ground==="grass") ctx.fillStyle="#5dbb63";
+      if (t.ground==="stone") ctx.fillStyle="#888";
+
+      ctx.fillRect(x*TILE_SIZE,y*TILE_SIZE,TILE_SIZE,TILE_SIZE);
+
+      ctx.fillStyle="rgba(0,0,0,0.1)";
+      ctx.fillRect(x*TILE_SIZE,y*TILE_SIZE,TILE_SIZE,5);
+
+      if (t.object==="tree"){
+        ctx.fillStyle="#6b3e26";
+        ctx.fillRect(x*TILE_SIZE+17,y*TILE_SIZE+20,6,15);
+
+        ctx.fillStyle="#2e8b57";
+        ctx.beginPath();
+        ctx.arc(x*TILE_SIZE+20,y*TILE_SIZE+15,14,0,Math.PI*2);
+        ctx.fill();
+      }
+
+      if (t.object==="house"){
+        ctx.fillStyle="#c0392b";
+        ctx.fillRect(x*TILE_SIZE+8,y*TILE_SIZE+18,24,18);
+
+        ctx.fillStyle="#8e2b23";
+        ctx.beginPath();
+        ctx.moveTo(x*TILE_SIZE+8,y*TILE_SIZE+18);
+        ctx.lineTo(x*TILE_SIZE+20,y*TILE_SIZE+6);
+        ctx.lineTo(x*TILE_SIZE+32,y*TILE_SIZE+18);
+        ctx.fill();
+
+        ctx.fillStyle="#5a3a1b";
+        ctx.fillRect(x*TILE_SIZE+18,y*TILE_SIZE+25,4,11);
+      }
+
+      ctx.strokeStyle="rgba(0,0,0,0.1)";
+      ctx.strokeRect(x*TILE_SIZE,y*TILE_SIZE,TILE_SIZE,TILE_SIZE);
+    }
+  }
+
+  // ENTITIES (REALISTIC)
+  entities.forEach(e=>{
+    let px=e.x*TILE_SIZE;
+    let py=e.y*TILE_SIZE;
+
+    // mens
+    if(e.type==="human"){
+      ctx.fillStyle="rgba(0,0,0,0.2)";
+      ctx.beginPath();
+      ctx.ellipse(px+20,py+30,10,4,0,0,Math.PI*2);
+      ctx.fill();
+
+      ctx.fillStyle="#f1c27d";
+      ctx.beginPath();
+      ctx.arc(px+20,py+12,6,0,Math.PI*2);
+      ctx.fill();
+
+      ctx.fillStyle="#3498db";
+      ctx.fillRect(px+14,py+18,12,12);
+
+      ctx.strokeStyle="#000";
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(px+16,py+30);
+      ctx.lineTo(px+14+Math.sin(Date.now()/200)*2,py+36);
+      ctx.moveTo(px+24,py+30);
+      ctx.lineTo(px+26-Math.sin(Date.now()/200)*2,py+36);
+      ctx.stroke();
+    }
+
+    // dier
+    if(e.type==="animal"){
+      ctx.fillStyle="rgba(0,0,0,0.2)";
+      ctx.fillRect(px+12,py+28,16,4);
+
+      ctx.fillStyle="#e67e22";
+      ctx.fillRect(px+10,py+16,20,10);
+
+      ctx.fillRect(px+26,py+18,8,6);
+
+      ctx.beginPath();
+      ctx.moveTo(px+28,py+18);
+      ctx.lineTo(px+30,py+14);
+      ctx.lineTo(px+32,py+18);
+      ctx.fill();
+
+      ctx.fillRect(px+12,py+26,3,6);
+      ctx.fillRect(px+20,py+26,3,6);
+    }
+
+    // vis
+    if(e.type==="fish"){
+      ctx.fillStyle="#00d4ff";
+      ctx.beginPath();
+      ctx.ellipse(px+20,py+20,10,5,0,0,Math.PI*2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(px+10,py+20);
+      ctx.lineTo(px+4,py+15);
+      ctx.lineTo(px+4,py+25);
+      ctx.fill();
+
+      ctx.fillStyle="#000";
+      ctx.beginPath();
+      ctx.arc(px+24,py+18,1.5,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    // vogel
+    if(e.type==="bird"){
+      let flap=Math.sin(Date.now()/150)*5;
+
+      ctx.strokeStyle="#fff";
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(px+10,py+20);
+      ctx.lineTo(px+20,py+20-flap);
+      ctx.lineTo(px+30,py+20);
+      ctx.stroke();
+
+      ctx.fillStyle="#fff";
+      ctx.beginPath();
+      ctx.arc(px+20,py+20,4,0,Math.PI*2);
+      ctx.fill();
+    }
+  });
+}
+
+// save/load
+function saveGame(slot){
+  localStorage.setItem("map"+slot,JSON.stringify(map));
+  localStorage.setItem("entities"+slot,JSON.stringify(entities));
+  alert("Saved "+slot);
+}
+
+function loadGame(slot){
+  let m=localStorage.getItem("map"+slot);
+  let e=localStorage.getItem("entities"+slot);
+  if(m&&e){
+    map=JSON.parse(m);
+    entities=JSON.parse(e);
+  }
+}
+
+// autosave
+setInterval(()=>{
+  localStorage.setItem("autosave_map",JSON.stringify(map));
+  localStorage.setItem("autosave_entities",JSON.stringify(entities));
+},5000);
+
+window.onload=()=>{
+  let m=localStorage.getItem("autosave_map");
+  let e=localStorage.getItem("autosave_entities");
+  if(m&&e){
+    map=JSON.parse(m);
+    entities=JSON.parse(e);
+  }
+};
+
+// loop
+function loop(){
+  updateEntities();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+
+</script>
+
+</body>
+</html>
