@@ -223,3 +223,12 @@ document.getElementById("backBtn").onclick = backToMenu;
 
 </body>
 </html>
+<script>
+// 🎁 kans op pack
+if(Math.random() < 0.4){
+  let packs = parseInt(localStorage.getItem("packs")) || 0;
+  packs++;
+  localStorage.setItem("packs", packs);
+  alert("🎁 Je hebt een pack gekregen!");
+}
+</script>
