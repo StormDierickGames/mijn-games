@@ -14,15 +14,43 @@ body {
   text-align: center;
 }
 
-#search {
-  margin: 10px;
-  padding: 10px;
-  width: 80%;
-  max-width: 300px;
+/* collectie knop */
+#collectionBtn {
+  position: fixed;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #334155;
+  padding: 15px;
   border-radius: 10px;
-  border: none;
+  cursor: pointer;
 }
 
+/* collectie menu */
+#collection {
+  position: fixed;
+  left: -100%;
+  top: 0;
+  width: 250px;
+  height: 100%;
+  background: #020617;
+  transition: 0.3s;
+  overflow-y: auto;
+  padding: 15px;
+}
+
+#collection.open {
+  left: 0;
+}
+
+.card {
+  background: #1e293b;
+  margin: 5px;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+/* menu */
 .menu {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -32,31 +60,10 @@ body {
 
 .game {
   padding: 20px;
-  border-radius: 15px;
   background: #1e293b;
+  border-radius: 15px;
   text-decoration: none;
   color: white;
-}
-
-/* cards */
-#cards {
-  margin-top: 20px;
-}
-
-.card {
-  display: inline-block;
-  padding: 15px;
-  margin: 5px;
-  border-radius: 10px;
-  background: #334155;
-}
-
-button {
-  padding: 10px;
-  margin: 5px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
 }
 </style>
 </head>
@@ -65,9 +72,16 @@ button {
 
 <h1>⚡ StormPlay</h1>
 
-<input id="search" placeholder="Zoek game...">
+<!-- 🎴 knop -->
+<div id="collectionBtn" onclick="toggleCollection()">🎴</div>
 
-<!-- 🎮 GAMES -->
+<!-- 🎴 collectie -->
+<div id="collection">
+  <h2>🎴 Jouw collectie</h2>
+  <div id="cards"></div>
+</div>
+
+<!-- 🎮 games -->
 <div class="menu">
   <a href="bunny/index.html" class="game">🐰 Bunny</a>
   <a href="boxgame/index.html" class="game">📦 Box</a>
@@ -79,26 +93,8 @@ button {
   <a href="eiland/index.html" class="game">🌴 Eiland</a>
 </div>
 
-<!-- 🎴 CARD SYSTEM -->
-<h2>🎴 Jouw Cards</h2>
-
-<button onclick="openPack()">🎁 Open Pack</button>
-
-<div id="cards"></div>
-
 <script>
-// 🔍 search
-const search = document.getElementById("search");
-const games = document.querySelectorAll(".game");
-
-search.oninput = () => {
-  let v = search.value.toLowerCase();
-  games.forEach(g => {
-    g.style.display = g.innerText.toLowerCase().includes(v) ? "block" : "none";
-  });
-};
-
-// 🎴 kaarten lijst
+// 🎴 alle kaarten
 const allCards = [
   "🐰 Bunny Master",
   "📦 Box King",
@@ -108,33 +104,13 @@ const allCards = [
   "🐶 Puppy Boss",
   "🧩 Maze Brain",
   "🌴 Island Creator",
-  "🔥 Legendary Player"
+  "🔥 LEGENDARY"
 ];
 
-// 💾 load save
+// 💾 load
 let myCards = JSON.parse(localStorage.getItem("cards")) || [];
 
-// 🎁 open pack
-function openPack(){
-  let random = allCards[Math.floor(Math.random() * allCards.length)];
-
-  if(!myCards.includes(random)){
-    myCards.push(random);
-    alert("🎉 Nieuwe kaart: " + random);
-  } else {
-    alert("😅 Duplicate kaart!");
-  }
-
-  save();
-  renderCards();
-}
-
-// 💾 save
-function save(){
-  localStorage.setItem("cards", JSON.stringify(myCards));
-}
-
-// 🎨 render
+// 🎴 render
 function renderCards(){
   const container = document.getElementById("cards");
   container.innerHTML = "";
@@ -145,6 +121,11 @@ function renderCards(){
     div.innerText = card;
     container.appendChild(div);
   });
+}
+
+// 🎴 open/close
+function toggleCollection(){
+  document.getElementById("collection").classList.toggle("open");
 }
 
 // start
