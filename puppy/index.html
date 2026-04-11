@@ -268,11 +268,18 @@ update();
 </body>
 </html>
 <script>
-// 🎁 kans op pack
-if(Math.random() < 0.4){
-  let packs = parseInt(localStorage.getItem("packs")) || 0;
-  packs++;
-  localStorage.setItem("packs", packs);
-  alert("🎁 Je hebt een pack gekregen!");
-}
+let played = false;
+
+// pas NA interactie
+document.addEventListener("click", () => {
+  if(played) return;
+  played = true;
+
+  if(Math.random() < 0.3){
+    let packs = parseInt(localStorage.getItem("packs")) || 0;
+    packs++;
+    localStorage.setItem("packs", packs);
+    alert("🎁 Pack gevonden!");
+  }
+});
 </script>
