@@ -43,25 +43,28 @@ body {
   left: 0;
 }
 
+#closeBtn {
+  background: red;
+}
+
+/* cards */
 .card {
-  margin: 8px;
+  margin: 6px;
   padding: 10px;
   border-radius: 10px;
 }
 
-/* 🔒 locked */
 .locked {
   background: #111;
   color: #555;
 }
 
-/* rarity */
 .common { background:#334155; }
 .rare { background:#2563eb; }
 .epic { background:#9333ea; }
 .legendary { background:#f59e0b; }
 
-/* 🎮 menu */
+/* menu */
 .menu {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -76,11 +79,6 @@ body {
   text-decoration: none;
   color: white;
 }
-
-/* 🎁 pack knop */
-#packBtn {
-  margin-top: 10px;
-}
 </style>
 </head>
 
@@ -88,20 +86,17 @@ body {
 
 <h1>⚡ StormPlay</h1>
 
-<!-- 🎁 pack info -->
 <h3>🎁 Packs: <span id="packCount">0</span></h3>
-<button id="packBtn" onclick="openPack()">Open Pack</button>
+<button onclick="openPack()">🎁 Open Pack</button>
 
-<!-- 🎴 knop -->
 <div id="collectionBtn" onclick="toggleCollection()">📖</div>
 
-<!-- 📖 collectie -->
 <div id="collection">
+  <button id="closeBtn" onclick="toggleCollection()">❌ Sluit</button>
   <h2>📖 Collectieboek</h2>
   <div id="cards"></div>
 </div>
 
-<!-- 🎮 games -->
 <div class="menu">
   <a href="bunny/index.html" class="game">🐰 Bunny</a>
   <a href="boxgame/index.html" class="game">📦 Box</a>
@@ -114,25 +109,37 @@ body {
 </div>
 
 <script>
-// 🎴 alle kaarten
+// 🎴 VEEL MEER KAARTEN
 const allCards = [
-  {name:"🐰 Bunny Master",rarity:"common"},
+  // common
+  {name:"🐰 Bunny 1",rarity:"common"},
+  {name:"🐰 Bunny 2",rarity:"common"},
+  {name:"📦 Box 1",rarity:"common"},
+  {name:"🐟 Fish 1",rarity:"common"},
+  {name:"🐍 Snake 1",rarity:"common"},
+  {name:"🧱 Builder 1",rarity:"common"},
+
+  // rare
   {name:"🐰 Speed Bunny",rarity:"rare"},
-  {name:"📦 Box King",rarity:"common"},
-  {name:"🐟 Golden Fish",rarity:"epic"},
-  {name:"🐍 Snake God",rarity:"rare"},
-  {name:"🧱 Builder",rarity:"common"},
+  {name:"📦 Mega Box",rarity:"rare"},
+  {name:"🐟 Fast Fish",rarity:"rare"},
+  {name:"🐍 Ninja Snake",rarity:"rare"},
+
+  // epic
   {name:"🐶 Alpha Dog",rarity:"epic"},
-  {name:"🧩 Maze Wizard",rarity:"rare"},
+  {name:"🧩 Maze Wizard",rarity:"epic"},
+  {name:"🌴 Island Master",rarity:"epic"},
+
+  // legendary
   {name:"🌴 Island God",rarity:"legendary"},
-  {name:"🔥 Storm Legend",rarity:"legendary"}
+  {name:"🔥 Storm King",rarity:"legendary"}
 ];
 
 // 💾 load
 let myCards = JSON.parse(localStorage.getItem("cards")) || [];
 let packs = parseInt(localStorage.getItem("packs")) || 0;
 
-// 🎁 update UI
+// UI update
 function updateUI(){
   document.getElementById("packCount").innerText = packs;
 }
@@ -152,21 +159,21 @@ function openPack(){
     myCards.push(drop);
     alert("🎉 Nieuwe kaart: " + drop.name);
   } else {
-    alert("😅 Duplicate kaart!");
+    alert("😅 Duplicate!");
   }
 
   save();
   renderCards();
 }
 
-// 💾 save
+// save
 function save(){
   localStorage.setItem("cards", JSON.stringify(myCards));
   localStorage.setItem("packs", packs);
   updateUI();
 }
 
-// 📖 render collectieboek
+// render
 function renderCards(){
   const c = document.getElementById("cards");
   c.innerHTML = "";
@@ -188,7 +195,7 @@ function renderCards(){
   });
 }
 
-// 📖 toggle
+// toggle
 function toggleCollection(){
   document.getElementById("collection").classList.toggle("open");
 }
