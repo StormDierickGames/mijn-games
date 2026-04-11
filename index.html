@@ -12,14 +12,8 @@ body {
   background: #0f172a;
   color: white;
   text-align: center;
-  transition: background 0.5s;
 }
 
-h1 {
-  margin-top: 20px;
-}
-
-/* zoekbalk */
 #search {
   margin-top: 10px;
   padding: 12px;
@@ -29,21 +23,6 @@ h1 {
   border: none;
 }
 
-/* kleur knoppen */
-.colors {
-  margin-top: 15px;
-}
-
-button {
-  padding: 10px;
-  margin: 5px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-/* menu */
 .menu {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -57,13 +36,18 @@ button {
   background: #1e293b;
   text-decoration: none;
   color: white;
-  font-size: 18px;
-  transition: 0.2s;
 }
 
-.game:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 15px #00ffff;
+.colors {
+  margin-top: 15px;
+}
+
+button {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -71,23 +55,19 @@ button {
 <body>
 
 <h1>⚡ StormPlay</h1>
-<p>Speel. Win. Herhaal.</p>
 
-<input type="text" id="search" placeholder="Zoek een game...">
+<input id="search" placeholder="Zoek game...">
 
-<!-- 🎨 KLEUR KIEZEN -->
+<!-- 🎨 kleuren -->
 <div class="colors">
-  <p>🎨 Kies achtergrond:</p>
-  <button onclick="setBg('#0f172a')">🌑 Donker</button>
-  <button onclick="setBg('#1e3a8a')">🔵 Blauw</button>
-  <button onclick="setBg('#065f46')">🟢 Groen</button>
-  <button onclick="setBg('#7c2d12')">🟠 Oranje</button>
-  <button onclick="setBg('#4c1d95')">🟣 Paars</button>
+  <button onclick="setBg('#0f172a')">🌑</button>
+  <button onclick="setBg('#1e3a8a')">🔵</button>
+  <button onclick="setBg('#065f46')">🟢</button>
+  <button onclick="setBg('#7c2d12')">🟠</button>
 </div>
 
 <!-- 🎮 GAMES -->
 <div class="menu">
-
   <a href="bunny/index.html" class="game">🐰 Bunny</a>
   <a href="boxgame/index.html" class="game">📦 Box</a>
   <a href="fishscore/index.html" class="game">🐟 Fish</a>
@@ -96,34 +76,43 @@ button {
   <a href="puppy/index.html" class="game">🐶 Puppy</a>
   <a href="maze/index.html" class="game">🧩 Maze</a>
   <a href="eiland/index.html" class="game">🌴 Eiland</a>
-
 </div>
 
+<!-- 💬 COMMENTS -->
+<h2>💬 Comments</h2>
+
+<script src="https://giscus.app/client.js"
+        data-repo="StormDierickGames/mijn-games"
+        data-repo-id="PASTE_HIER"
+        data-category="General"
+        data-category-id="PASTE_HIER"
+        data-mapping="pathname"
+        data-theme="dark"
+        crossorigin="anonymous"
+        async>
+</script>
+
 <script>
-// 🔍 zoek
+// zoek
 const search = document.getElementById("search");
 const games = document.querySelectorAll(".game");
 
-search.addEventListener("input", () => {
-  let val = search.value.toLowerCase();
-
+search.oninput = () => {
+  let v = search.value.toLowerCase();
   games.forEach(g => {
-    g.style.display = g.innerText.toLowerCase().includes(val) ? "block" : "none";
+    g.style.display = g.innerText.toLowerCase().includes(v) ? "block" : "none";
   });
-});
+};
 
-// 🎨 achtergrond veranderen
+// achtergrond
 function setBg(color){
   document.body.style.background = color;
-  localStorage.setItem("bgColor", color);
+  localStorage.setItem("bg", color);
 }
 
-// 💾 laad kleur
 window.onload = () => {
-  let saved = localStorage.getItem("bgColor");
-  if(saved){
-    document.body.style.background = saved;
-  }
+  let bg = localStorage.getItem("bg");
+  if(bg) document.body.style.background = bg;
 };
 </script>
 
