@@ -12,23 +12,9 @@ body {
   background: #0f172a;
   color: white;
   text-align: center;
-  transition: background 0.4s;
 }
 
-/* 🎨 kleur knoppen */
-.colors {
-  margin-top: 10px;
-}
-
-button {
-  padding: 10px;
-  margin: 5px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-}
-
-/* 🎴 collectie knop */
+/* 🎴 knop */
 #collectionBtn {
   position: fixed;
   left: 10px;
@@ -40,12 +26,12 @@ button {
   cursor: pointer;
 }
 
-/* 🎴 collectie menu */
+/* 📖 collectie */
 #collection {
   position: fixed;
   left: -100%;
   top: 0;
-  width: 260px;
+  width: 300px;
   height: 100%;
   background: #020617;
   transition: 0.3s;
@@ -58,12 +44,18 @@ button {
 }
 
 .card {
-  margin: 6px;
+  margin: 8px;
   padding: 10px;
   border-radius: 10px;
 }
 
-/* rarity kleuren */
+/* 🔒 locked */
+.locked {
+  background: #111;
+  color: #555;
+}
+
+/* rarity */
 .common { background:#334155; }
 .rare { background:#2563eb; }
 .epic { background:#9333ea; }
@@ -84,6 +76,11 @@ button {
   text-decoration: none;
   color: white;
 }
+
+/* 🎁 pack knop */
+#packBtn {
+  margin-top: 10px;
+}
 </style>
 </head>
 
@@ -91,21 +88,16 @@ button {
 
 <h1>⚡ StormPlay</h1>
 
-<!-- 🎨 kleuren -->
-<div class="colors">
-  <button onclick="setBg('#0f172a')">🌑</button>
-  <button onclick="setBg('#1e3a8a')">🔵</button>
-  <button onclick="setBg('#065f46')">🟢</button>
-  <button onclick="setBg('#7c2d12')">🟠</button>
-  <button onclick="setBg('#4c1d95')">🟣</button>
-</div>
+<!-- 🎁 pack info -->
+<h3>🎁 Packs: <span id="packCount">0</span></h3>
+<button id="packBtn" onclick="openPack()">Open Pack</button>
 
 <!-- 🎴 knop -->
-<div id="collectionBtn" onclick="toggleCollection()">🎴</div>
+<div id="collectionBtn" onclick="toggleCollection()">📖</div>
 
-<!-- 🎴 collectie -->
+<!-- 📖 collectie -->
 <div id="collection">
-  <h2>🎴 Collectie</h2>
+  <h2>📖 Collectieboek</h2>
   <div id="cards"></div>
 </div>
 
@@ -122,59 +114,88 @@ button {
 </div>
 
 <script>
-// 🎨 achtergrond
-function setBg(color){
-  document.body.style.background = color;
-  localStorage.setItem("bg", color);
-}
-
-window.onload = () => {
-  let bg = localStorage.getItem("bg");
-  if(bg) document.body.style.background = bg;
-  renderCards();
-};
-
-// 🎴 kaarten (VEEL MEER)
+// 🎴 alle kaarten
 const allCards = [
   {name:"🐰 Bunny Master",rarity:"common"},
   {name:"🐰 Speed Bunny",rarity:"rare"},
   {name:"📦 Box King",rarity:"common"},
-  {name:"📦 Mega Box",rarity:"rare"},
-  {name:"🐟 Fish Pro",rarity:"common"},
   {name:"🐟 Golden Fish",rarity:"epic"},
   {name:"🐍 Snake God",rarity:"rare"},
-  {name:"🐍 Toxic Snake",rarity:"epic"},
   {name:"🧱 Builder",rarity:"common"},
-  {name:"🧱 Master Builder",rarity:"rare"},
-  {name:"🐶 Puppy Boss",rarity:"common"},
   {name:"🐶 Alpha Dog",rarity:"epic"},
-  {name:"🧩 Maze Brain",rarity:"common"},
   {name:"🧩 Maze Wizard",rarity:"rare"},
-  {name:"🌴 Island Creator",rarity:"rare"},
   {name:"🌴 Island God",rarity:"legendary"},
   {name:"🔥 Storm Legend",rarity:"legendary"}
 ];
 
 // 💾 load
 let myCards = JSON.parse(localStorage.getItem("cards")) || [];
+let packs = parseInt(localStorage.getItem("packs")) || 0;
 
-// 🎴 render
+// 🎁 update UI
+function updateUI(){
+  document.getElementById("packCount").innerText = packs;
+}
+
+// 🎁 open pack
+function openPack(){
+  if(packs <= 0){
+    alert("❌ Geen packs!");
+    return;
+  }
+
+  packs--;
+
+  let drop = allCards[Math.floor(Math.random()*allCards.length)];
+
+  if(!myCards.find(c=>c.name===drop.name)){
+    myCards.push(drop);
+    alert("🎉 Nieuwe kaart: " + drop.name);
+  } else {
+    alert("😅 Duplicate kaart!");
+  }
+
+  save();
+  renderCards();
+}
+
+// 💾 save
+function save(){
+  localStorage.setItem("cards", JSON.stringify(myCards));
+  localStorage.setItem("packs", packs);
+  updateUI();
+}
+
+// 📖 render collectieboek
 function renderCards(){
   const c = document.getElementById("cards");
   c.innerHTML = "";
 
-  myCards.forEach(card=>{
+  allCards.forEach(card=>{
+    let owned = myCards.find(c=>c.name===card.name);
+
     let div = document.createElement("div");
-    div.className = "card " + card.rarity;
-    div.innerText = card.name;
+
+    if(owned){
+      div.className = "card " + card.rarity;
+      div.innerText = card.name;
+    } else {
+      div.className = "card locked";
+      div.innerText = "❓ ???";
+    }
+
     c.appendChild(div);
   });
 }
 
-// 🎴 toggle
+// 📖 toggle
 function toggleCollection(){
   document.getElementById("collection").classList.toggle("open");
 }
+
+// start
+updateUI();
+renderCards();
 </script>
 
 </body>
