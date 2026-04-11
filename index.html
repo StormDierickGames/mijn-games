@@ -12,9 +12,23 @@ body {
   background: #0f172a;
   color: white;
   text-align: center;
+  transition: background 0.4s;
 }
 
-/* collectie knop */
+/* 🎨 kleur knoppen */
+.colors {
+  margin-top: 10px;
+}
+
+button {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+/* 🎴 collectie knop */
 #collectionBtn {
   position: fixed;
   left: 10px;
@@ -26,12 +40,12 @@ body {
   cursor: pointer;
 }
 
-/* collectie menu */
+/* 🎴 collectie menu */
 #collection {
   position: fixed;
   left: -100%;
   top: 0;
-  width: 250px;
+  width: 260px;
   height: 100%;
   background: #020617;
   transition: 0.3s;
@@ -44,13 +58,18 @@ body {
 }
 
 .card {
-  background: #1e293b;
-  margin: 5px;
+  margin: 6px;
   padding: 10px;
   border-radius: 10px;
 }
 
-/* menu */
+/* rarity kleuren */
+.common { background:#334155; }
+.rare { background:#2563eb; }
+.epic { background:#9333ea; }
+.legendary { background:#f59e0b; }
+
+/* 🎮 menu */
 .menu {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -72,12 +91,21 @@ body {
 
 <h1>⚡ StormPlay</h1>
 
+<!-- 🎨 kleuren -->
+<div class="colors">
+  <button onclick="setBg('#0f172a')">🌑</button>
+  <button onclick="setBg('#1e3a8a')">🔵</button>
+  <button onclick="setBg('#065f46')">🟢</button>
+  <button onclick="setBg('#7c2d12')">🟠</button>
+  <button onclick="setBg('#4c1d95')">🟣</button>
+</div>
+
 <!-- 🎴 knop -->
 <div id="collectionBtn" onclick="toggleCollection()">🎴</div>
 
 <!-- 🎴 collectie -->
 <div id="collection">
-  <h2>🎴 Jouw collectie</h2>
+  <h2>🎴 Collectie</h2>
   <div id="cards"></div>
 </div>
 
@@ -94,17 +122,37 @@ body {
 </div>
 
 <script>
-// 🎴 alle kaarten
+// 🎨 achtergrond
+function setBg(color){
+  document.body.style.background = color;
+  localStorage.setItem("bg", color);
+}
+
+window.onload = () => {
+  let bg = localStorage.getItem("bg");
+  if(bg) document.body.style.background = bg;
+  renderCards();
+};
+
+// 🎴 kaarten (VEEL MEER)
 const allCards = [
-  "🐰 Bunny Master",
-  "📦 Box King",
-  "🐟 Fish Pro",
-  "🐍 Snake God",
-  "🧱 Builder",
-  "🐶 Puppy Boss",
-  "🧩 Maze Brain",
-  "🌴 Island Creator",
-  "🔥 LEGENDARY"
+  {name:"🐰 Bunny Master",rarity:"common"},
+  {name:"🐰 Speed Bunny",rarity:"rare"},
+  {name:"📦 Box King",rarity:"common"},
+  {name:"📦 Mega Box",rarity:"rare"},
+  {name:"🐟 Fish Pro",rarity:"common"},
+  {name:"🐟 Golden Fish",rarity:"epic"},
+  {name:"🐍 Snake God",rarity:"rare"},
+  {name:"🐍 Toxic Snake",rarity:"epic"},
+  {name:"🧱 Builder",rarity:"common"},
+  {name:"🧱 Master Builder",rarity:"rare"},
+  {name:"🐶 Puppy Boss",rarity:"common"},
+  {name:"🐶 Alpha Dog",rarity:"epic"},
+  {name:"🧩 Maze Brain",rarity:"common"},
+  {name:"🧩 Maze Wizard",rarity:"rare"},
+  {name:"🌴 Island Creator",rarity:"rare"},
+  {name:"🌴 Island God",rarity:"legendary"},
+  {name:"🔥 Storm Legend",rarity:"legendary"}
 ];
 
 // 💾 load
@@ -112,24 +160,21 @@ let myCards = JSON.parse(localStorage.getItem("cards")) || [];
 
 // 🎴 render
 function renderCards(){
-  const container = document.getElementById("cards");
-  container.innerHTML = "";
+  const c = document.getElementById("cards");
+  c.innerHTML = "";
 
-  myCards.forEach(card => {
+  myCards.forEach(card=>{
     let div = document.createElement("div");
-    div.className = "card";
-    div.innerText = card;
-    container.appendChild(div);
+    div.className = "card " + card.rarity;
+    div.innerText = card.name;
+    c.appendChild(div);
   });
 }
 
-// 🎴 open/close
+// 🎴 toggle
 function toggleCollection(){
   document.getElementById("collection").classList.toggle("open");
 }
-
-// start
-renderCards();
 </script>
 
 </body>
