@@ -2,7 +2,11 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>⚡ StormPlay 🎮</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
 
 <style>
 body {
@@ -15,41 +19,54 @@ body {
 
 h1 {
   margin-top: 20px;
-  font-size: 40px;
+  font-size: 32px;
 }
 
+p {
+  opacity: 0.7;
+}
+
+/* zoekbalk */
 #search {
-  margin-top: 20px;
-  padding: 10px;
-  width: 250px;
+  margin-top: 15px;
+  padding: 12px;
+  width: 80%;
+  max-width: 300px;
   border-radius: 10px;
   border: none;
+  font-size: 16px;
 }
 
-/* MENU */
+/* menu grid */
 .menu {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 40px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 15px;
+  padding: 20px;
 }
 
+/* game cards */
 .game {
-  width: 180px;
-  padding: 20px;
+  padding: 25px 10px;
   border-radius: 20px;
   background: #1e293b;
-  cursor: pointer;
-  transition: 0.3s;
   text-decoration: none;
   color: white;
   font-size: 18px;
+  transition: 0.2s;
 }
 
 .game:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 20px #00ffff;
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #00ffff;
+}
+
+/* mobiel groter */
+@media (max-width: 500px) {
+  .game {
+    font-size: 20px;
+    padding: 30px 10px;
+  }
 }
 </style>
 </head>
@@ -70,10 +87,12 @@ h1 {
   <a href="sandbox/index.html" class="game">🧱 Sandbox</a>
   <a href="puppy/index.html" class="game">🐶 Puppy Clicker</a>
   <a href="maze/index.html" class="game">🧩 Maze Game</a>
+  <a href="eiland/index.html" class="game">🌴 Eiland Simulator</a>
 
 </div>
 
 <script>
+// 🔍 zoekbalk
 const search = document.getElementById("search");
 const games = document.querySelectorAll(".game");
 
@@ -85,6 +104,11 @@ search.addEventListener("input", () => {
     game.style.display = text.includes(value) ? "block" : "none";
   });
 });
+
+// 📱 PWA (app)
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
 </script>
 
 </body>
