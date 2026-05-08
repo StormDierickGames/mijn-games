@@ -1,0 +1,1276 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Slakje 8-Bit Desktop</title>
+  <style>
+    :root{
+      --bg1:#1b2240;
+      --bg2:#11162a;
+      --panel:#d8d8c8;
+      --panel2:#f4f1dc;
+      --text:#111827;
+      --accent:#4f7cff;
+      --danger:#ef4444;
+      --shadow:#00000066;
+      --task:#0e1325;
+    }
+
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      background:linear-gradient(180deg,var(--bg1),var(--bg2));
+      font-family:"Courier New", monospace;
+      image-rendering:pixelated;
+      user-select:none;
+    }
+
+    #desktop{
+      position:relative;
+      width:100vw;
+      height:100vh;
+      cursor:none;
+      color:#fff;
+    }
+
+    .icon{
+      position:absolute;
+      width:88px;
+      padding:8px 6px;
+      text-align:center;
+      color:#fff;
+      z-index:5;
+      border-radius:0;
+    }
+    .icon:hover{background:rgba(255,255,255,.08)}
+    .emoji{font-size:30px;display:block;line-height:1;margin-bottom:4px}
+    .label{font-size:12px;line-height:1.1;text-shadow:2px 2px 0 #000}
+
+    .window{
+      position:absolute;
+      width:620px;
+      height:400px;
+      background:var(--panel);
+      color:var(--text);
+      display:none;
+      overflow:hidden;
+      border:4px solid #111;
+      box-shadow:0 10px 0 var(--shadow);
+      border-radius:0;
+    }
+    .titlebar{
+      height:40px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 10px;
+      background:linear-gradient(180deg,#7aa0ff,#4f7cff);
+      color:#fff;
+      cursor:move;
+      border-bottom:4px solid #111;
+    }
+    .title{font-weight:700;font-size:14px;text-shadow:2px 2px 0 #000}
+    .btn{
+      border:3px solid #111;
+      background:#fff;
+      color:#111;
+      font-weight:700;
+      cursor:pointer;
+      padding:4px 10px;
+      box-shadow:3px 3px 0 #000;
+      border-radius:0;
+      font-family:inherit;
+    }
+    .btn:hover{transform:translate(1px,1px);box-shadow:2px 2px 0 #000}
+
+    .content{
+      height:calc(100% - 40px);
+      padding:12px;
+      overflow:auto;
+      background:linear-gradient(180deg,var(--panel2),var(--panel));
+    }
+    .card{
+      background:#fff;
+      border:4px solid #111;
+      padding:10px;
+      margin-bottom:10px;
+      box-shadow:4px 4px 0 #000;
+    }
+
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    .appBtn,.linkBtn,.sendBtn,.toastMiniBtn,.soundBtn{
+      border:3px solid #111;
+      background:#fff;
+      color:#111;
+      cursor:pointer;
+      padding:8px 10px;
+      font-family:inherit;
+      font-weight:700;
+      box-shadow:3px 3px 0 #000;
+      border-radius:0;
+    }
+    .appBtn:hover,.linkBtn:hover,.sendBtn:hover,.toastMiniBtn:hover,.soundBtn:hover{transform:translate(1px,1px);box-shadow:2px 2px 0 #000}
+    .sendBtn{background:#fff3a6}
+    .small{font-size:12px;color:#374151}
+    a.fakeLink{color:#1d4ed8;text-decoration:underline;cursor:pointer}
+
+    #taskbar{
+      position:absolute;
+      left:0;right:0;bottom:0;
+      height:52px;
+      background:var(--task);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 12px;
+      border-top:4px solid #111;
+      z-index:50;
+    }
+    #taskbarLeft,#taskbarRight{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .stat{
+      background:#fff;
+      color:#111;
+      border:3px solid #111;
+      padding:5px 8px;
+      box-shadow:3px 3px 0 #000;
+      font-size:12px;
+      font-weight:700;
+    }
+    #startBadge{background:#fff;color:#111;border:3px solid #111;padding:5px 10px;box-shadow:3px 3px 0 #000;font-weight:800}
+
+    #cursor{
+      position:absolute;
+      width:14px;
+      height:14px;
+      background:#fff;
+      border:3px solid #111;
+      transform:translate(-50%,-50%);
+      pointer-events:none;
+      z-index:1000;
+      box-shadow:2px 2px 0 #000;
+    }
+
+    #slug{
+      position:absolute;
+      width:58px;
+      height:38px;
+      background:#86efac;
+      border:4px solid #111;
+      box-shadow:4px 4px 0 #000;
+      transform:translate(-50%,-50%);
+      z-index:900;
+      pointer-events:none;
+      display:grid;
+      place-items:center;
+      font-size:22px;
+      line-height:1;
+      border-radius:0;
+      transition:transform .15s linear;
+    }
+    #slug.dance{animation:wiggle .18s infinite alternate}
+    #slug.sleep{background:#cbd5e1; animation:snooze 1s infinite alternate}
+    #slug.tired{background:#fde68a}
+    @keyframes wiggle{from{transform:translate(-50%,-50%) rotate(-8deg)}to{transform:translate(-50%,-50%) rotate(8deg)}}
+    @keyframes snooze{from{filter:grayscale(.3)}to{filter:grayscale(0)}}
+
+    #overlay{
+      position:absolute;inset:0;background:rgba(0,0,0,.78);z-index:2000;display:none;align-items:center;justify-content:center;color:#fff;text-align:center;padding:20px
+    }
+    #overlayBox{
+      width:min(560px,92vw);
+      background:#10172a;
+      border:4px solid #fff;
+      box-shadow:8px 8px 0 #000;
+      padding:18px;
+    }
+    #overlay h1{margin:0 0 10px;font-size:34px}
+    #overlay p{margin:8px 0 14px;font-size:16px;line-height:1.45}
+    .bigBtn{border:3px solid #111;background:#fff;color:#111;font-weight:800;padding:10px 14px;cursor:pointer;font-family:inherit;box-shadow:3px 3px 0 #000}
+    .bigBtn.primary{background:#86efac}
+
+    .chatShell{display:grid;grid-template-columns:170px 1fr;height:100%;gap:10px}
+    .contacts,.messages,.playlist{background:#fff;border:4px solid #111;box-shadow:4px 4px 0 #000;overflow:auto;padding:8px}
+    .contact{padding:8px;border:3px solid #111;margin-bottom:8px;background:#eef2ff;cursor:pointer;font-weight:700}
+    .contact.active{background:#fef08a}
+    .chatArea{display:grid;grid-template-rows:auto 1fr auto;gap:8px;height:100%}
+    .msg{max-width:82%;padding:8px 10px;border:3px solid #111;margin-bottom:8px;background:#fff}
+    .me{margin-left:auto;background:#dbeafe}
+    .them{background:#e5e7eb}
+    .composer{display:flex;gap:8px}
+    .composer input{flex:1;border:3px solid #111;padding:10px;font-family:inherit}
+
+    .videoGrid{display:grid;grid-template-columns:240px 1fr;gap:10px;height:100%}
+    .videoItem{display:flex;gap:8px;align-items:center;padding:8px;border:3px solid #111;background:#fff;box-shadow:3px 3px 0 #000;cursor:pointer;margin-bottom:8px}
+    .videoItem.active{background:#dbeafe}
+    .thumb{width:72px;height:42px;background:#111;color:#fff;display:grid;place-items:center;font-size:18px;border:3px solid #111}
+    .player{background:#fff;border:4px solid #111;box-shadow:4px 4px 0 #000;padding:8px;display:grid;grid-template-rows:1fr auto auto;gap:8px;min-height:0}
+    .screen{border:4px solid #111;background:#0f172a;color:#fff;display:grid;place-items:center;position:relative;overflow:hidden;min-height:190px}
+    .screen iframe{width:100%;height:100%;border:0}
+    .screenOverlay{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(180deg,rgba(15,23,42,.25),rgba(15,23,42,.75));pointer-events:none;text-align:center;padding:12px}
+    .playerControls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .bar{width:100%;height:10px;background:#e5e7eb;border:3px solid #111;overflow:hidden;box-shadow:3px 3px 0 #000}
+    .bar>div{height:100%;width:0%;background:linear-gradient(90deg,#4f7cff,#22c55e)}
+    .mutedBox{padding:8px;border:3px solid #111;background:#fff}
+
+    .toastArea{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:8px;z-index:3000;pointer-events:none}
+    .toast{width:320px;background:#10172a;color:#fff;border:4px solid #fff;box-shadow:6px 6px 0 #000;padding:10px;pointer-events:auto;cursor:pointer}
+    .toastTitle{font-weight:800;margin-bottom:4px;text-shadow:2px 2px 0 #000}
+    .toastText{font-size:13px;line-height:1.35}
+    .toastActions{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+
+    .mailList{display:grid;gap:8px}
+    .mailItem{background:#fff;border:4px solid #111;box-shadow:4px 4px 0 #000;padding:8px;cursor:pointer}
+    .mailItem.unread{background:#fef08a}
+    .settingsGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .switchRow{display:flex;justify-content:space-between;align-items:center;gap:8px}
+
+    .popupLayer{position:absolute;inset:0;pointer-events:none;z-index:1800}
+    .popup{
+      position:absolute;
+      width:240px;
+      background:#fff;
+      color:#111;
+      border:4px solid #111;
+      box-shadow:6px 6px 0 #000;
+      pointer-events:auto;
+    }
+    .popup.ad{background:#fff2cc}
+    .popup.glitch{background:#d1fae5}
+    .popupHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:6px 8px;
+      background:#111827;
+      color:#fff;
+      font-weight:700;
+      border-bottom:4px solid #111;
+    }
+    .popupBody{padding:10px;font-size:13px;line-height:1.4}
+    .popupClose{
+      width:24px;height:24px;
+      border:3px solid #111;
+      background:#ef4444;
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+      box-shadow:2px 2px 0 #000;
+      line-height:1;
+      padding:0;
+    }
+    .popupClose:hover{transform:translate(1px,1px);box-shadow:1px 1px 0 #000}
+
+    .soundboardGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  </style>
+</head>
+<body>
+<div id="desktop">
+  <div class="popupLayer" id="popupLayer"></div>
+  <div class="toastArea" id="toastArea"></div>
+
+  <div class="icon" style="top:24px;left:20px" onclick="openWindow('gameWin')"><span class="emoji">🎮</span><div class="label">Game Hub</div></div>
+  <div class="icon" style="top:122px;left:20px" onclick="openWindow('ytWin')"><span class="emoji">▶️</span><div class="label">YouTube</div></div>
+  <div class="icon" style="top:220px;left:20px" onclick="openWindow('chatWin')"><span class="emoji">💬</span><div class="label">Chat App</div></div>
+  <div class="icon" style="top:318px;left:20px" onclick="openWindow('mailWin')"><span class="emoji">📩</span><div class="label">Mail</div></div>
+  <div class="icon" style="top:416px;left:20px" onclick="openWindow('webWin')"><span class="emoji">🌐</span><div class="label">Websites</div></div>
+
+  <div class="icon" style="top:24px;left:116px" onclick="openWindow('notesWin')"><span class="emoji">📝</span><div class="label">Notities</div></div>
+  <div class="icon" style="top:122px;left:116px" onclick="openWindow('calcWin')"><span class="emoji">🧮</span><div class="label">Calc</div></div>
+  <div class="icon" style="top:220px;left:116px" onclick="openWindow('storeWin')"><span class="emoji">🛒</span><div class="label">Store</div></div>
+  <div class="icon" style="top:318px;left:116px" onclick="openWindow('musicWin')"><span class="emoji">🎵</span><div class="label">Muziek</div></div>
+  <div class="icon" style="top:416px;left:116px" onclick="openWindow('weatherWin')"><span class="emoji">🌦️</span><div class="label">Weather</div></div>
+  <div class="icon" style="top:24px;left:212px" onclick="openWindow('settingsWin')"><span class="emoji">⚙️</span><div class="label">Settings</div></div>
+  <div class="icon" style="top:122px;left:212px" onclick="openWindow('soundWin')"><span class="emoji">🔊</span><div class="label">Soundboard</div></div>
+
+  <div id="gameWin" class="window" style="left:180px;top:74px;width:640px;height:420px">
+    <div class="titlebar"><div class="title">Game Hub</div><button class="btn" onclick="closeWindow('gameWin')">X</button></div>
+    <div class="content">
+      <div class="card"><strong>Arcade</strong><div class="small">Punten verdienen terwijl de slak je muis achtervolgt.</div></div>
+      <div class="card"><div class="row"><button class="appBtn" onclick="addScore(5,'Arcade bonus')">Arcade +5</button><button class="appBtn" onclick="addScore(10,'Puzzle bonus')">Puzzle +10</button><button class="appBtn" onclick="addScore(15,'Runner bonus')">Runner +15</button><button class="appBtn" onclick="addScore(25,'Boss bonus')">Boss +25</button></div></div>
+      <div class="card"><div class="miniGame" id="miniGame"></div></div>
+    </div>
+  </div>
+
+  <div id="ytWin" class="window" style="left:220px;top:84px;width:860px;height:520px">
+    <div class="titlebar"><div class="title">YouTube</div><button class="btn" onclick="closeWindow('ytWin')">X</button></div>
+    <div class="content">
+      <div class="videoGrid">
+        <div class="playlist" id="playlist"></div>
+        <div class="player">
+          <div class="screen" id="screen">
+            <div class="screenOverlay" id="screenOverlay"><div><div style="font-size:54px">▶️</div><h2 id="videoTitle" style="margin:6px 0 8px">Kies een video</h2><p id="videoDesc" style="margin:0;max-width:420px">Klik links op een AI-video om hem te bekijken.</p></div></div>
+          </div>
+          <div class="bar"><div id="progress"></div></div>
+          <div class="playerControls"><button class="appBtn" onclick="togglePlay()" id="playBtn">Play</button><button class="appBtn" onclick="nextVideo()">Volgende</button><div class="small">Tijd: <span id="videoTime">0.0</span>s / <span id="videoDur">0.0</span>s</div></div>
+          <div class="mutedBox">AI video’s in pixelstijl.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="chatWin" class="window" style="left:240px;top:100px;width:760px;height:500px">
+    <div class="titlebar"><div class="title">Chat App</div><button class="btn" onclick="closeWindow('chatWin')">X</button></div>
+    <div class="content">
+      <div class="chatShell">
+        <div class="contacts" id="contacts"></div>
+        <div class="chatArea">
+          <div class="card" style="margin:0"><strong id="chatName">Selecteer een chat</strong><div class="small" id="chatStatus">offline</div></div>
+          <div class="messages" id="messages"></div>
+          <div class="composer"><input id="chatInput" placeholder="Typ een bericht..." /><button class="sendBtn" onclick="sendChat()">Send</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="mailWin" class="window" style="left:270px;top:118px;width:760px;height:470px">
+    <div class="titlebar"><div class="title">Mail</div><button class="btn" onclick="closeWindow('mailWin')">X</button></div>
+    <div class="content">
+      <div class="card"><div class="row"><button class="appBtn" onclick="sendSystemMail('Chat invite','Mila heeft je uitgenodigd in de chat.','chat')">Test mail</button><button class="appBtn" onclick="sendSystemMail('Game reward','Je krijgt 15 bonuspunten!','bonus')">Reward mail</button><button class="appBtn" onclick="sendSystemMail('Slug alert','De slak wordt 5 seconden trager.','slow')">Slow mail</button></div></div>
+      <div class="mailList" id="mailList"></div>
+    </div>
+  </div>
+
+  <div id="webWin" class="window" style="left:300px;top:130px;width:660px;height:400px">
+    <div class="titlebar"><div class="title">Websites</div><button class="btn" onclick="closeWindow('webWin')">X</button></div>
+    <div class="content">
+      <div class="card"><strong>Snelle links</strong><p>Klik om nep-websites te openen in de game:</p><div class="row"><button class="linkBtn" onclick="setWebSite('Nieuws')">Nieuws</button><button class="linkBtn" onclick="setWebSite('Shop')">Shop</button><button class="linkBtn" onclick="setWebSite('Chat')">Chat</button><button class="linkBtn" onclick="setWebSite('Forum')">Forum</button></div></div>
+      <div class="card" id="siteBox"><h3 style="margin-top:0">Startpagina</h3><p>Kies een website hierboven.</p></div>
+    </div>
+  </div>
+
+  <div id="notesWin" class="window" style="left:330px;top:146px;width:520px;height:360px">
+    <div class="titlebar"><div class="title">Notities</div><button class="btn" onclick="closeWindow('notesWin')">X</button></div>
+    <div class="content">
+      <div class="card">
+        <textarea id="notesArea" style="width:100%;height:210px;border:3px solid #111;padding:10px;font-family:inherit;resize:none;outline:none"></textarea>
+        <div class="row" style="margin-top:10px"><button class="appBtn" onclick="saveNotes()">Opslaan</button><button class="appBtn" onclick="loadNotes()">Laden</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="calcWin" class="window" style="left:360px;top:166px;width:420px;height:330px">
+    <div class="titlebar"><div class="title">Calculator</div><button class="btn" onclick="closeWindow('calcWin')">X</button></div>
+    <div class="content">
+      <div class="card"><input id="calcInput" placeholder="Bijv. 5*7+2" style="width:100%;padding:10px;border:3px solid #111;font-family:inherit"><div class="row" style="margin-top:10px"><button class="appBtn" onclick="doCalc()">Bereken</button></div></div>
+      <div class="card"><strong>Resultaat:</strong> <span id="calcResult">-</span></div>
+    </div>
+  </div>
+
+  <div id="storeWin" class="window" style="left:400px;top:186px;width:540px;height:360px">
+    <div class="titlebar"><div class="title">Store</div><button class="btn" onclick="closeWindow('storeWin')">X</button></div>
+    <div class="content">
+      <div class="card"><strong>Power-ups</strong><p>Koop extra dingen met punten.</p><div class="row"><button class="appBtn" onclick="buyItem('slow')">Slower Slak - 30</button><button class="appBtn" onclick="buyItem('shield')">Shield - 50</button><button class="appBtn" onclick="buyItem('bonus')">Bonus Score - 40</button></div></div>
+      <div class="card" id="storeInfo">Geen item gekocht.</div>
+    </div>
+  </div>
+
+  <div id="musicWin" class="window" style="left:440px;top:104px;width:580px;height:380px">
+    <div class="titlebar"><div class="title">Muziek</div><button class="btn" onclick="closeWindow('musicWin')">X</button></div>
+    <div class="content">
+      <div class="card"><strong>Playlist</strong><div class="small">Muziek geeft kleine bonus-effecten en berichten.</div></div>
+      <div class="card"><div class="row"><button class="appBtn" onclick="musicAction('play')">Play</button><button class="appBtn" onclick="musicAction('pause')">Pause</button><button class="appBtn" onclick="musicAction('boost')">Focus Boost</button></div></div>
+      <div class="card" id="musicState">Muziek is uit.</div>
+    </div>
+  </div>
+
+  <div id="weatherWin" class="window" style="left:480px;top:138px;width:520px;height:320px">
+    <div class="titlebar"><div class="title">Weather</div><button class="btn" onclick="closeWindow('weatherWin')">X</button></div>
+    <div class="content">
+      <div class="card" id="weatherBox"><h3 style="margin-top:0">Vandaag</h3><p>Rustig weer. Perfect om van de slak weg te rennen.</p></div>
+      <div class="card"><button class="appBtn" onclick="weatherEvent()">Vraag weerbericht op</button></div>
+    </div>
+  </div>
+
+  <div id="settingsWin" class="window" style="left:520px;top:96px;width:560px;height:380px">
+    <div class="titlebar"><div class="title">Settings</div><button class="btn" onclick="closeWindow('settingsWin')">X</button></div>
+    <div class="content">
+      <div class="settingsGrid">
+        <div class="card">
+          <strong>Spelinstellingen</strong>
+          <div class="switchRow"><span>Slak snelheid</span><button class="appBtn" onclick="speedToggle()" id="speedLabel">Normaal</button></div>
+          <div class="switchRow" style="margin-top:10px"><span>Shield bij start</span><button class="appBtn" onclick="toggleStartShield()" id="shieldLabel">Uit</button></div>
+        </div>
+        <div class="card">
+          <strong>Berichten</strong>
+          <div class="small">Sommige app-berichten verschijnen vanzelf en doen echt iets.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="soundWin" class="window" style="left:560px;top:130px;width:520px;height:360px">
+    <div class="titlebar"><div class="title">Soundboard</div><button class="btn" onclick="closeWindow('soundWin')">X</button></div>
+    <div class="content">
+      <div class="card"><strong>Speel geluiden</strong><div class="small">Klik op een knop en hoor het effect.</div></div>
+      <div class="card">
+        <div class="soundboardGrid">
+          <button class="soundBtn" onclick="playSound('beep')">Beep</button>
+          <button class="soundBtn" onclick="playSound('boop')">Boop</button>
+          <button class="soundBtn" onclick="playSound('click')">Click</button>
+          <button class="soundBtn" onclick="playSound('error')">Error</button>
+          <button class="soundBtn" onclick="playSound('win')">Win</button>
+          <button class="soundBtn" onclick="playSound('dance')">Dance</button>
+        </div>
+      </div>
+      <div class="card"><button class="appBtn" onclick="toggleMute()" id="muteLabel">Geluid aan</button></div>
+    </div>
+  </div>
+
+  <div id="saveWin" class="window" style="left:350px;top:156px;width:500px;height:290px">
+    <div class="titlebar"><div class="title">Save / Highscore</div><button class="btn" onclick="closeWindow('saveWin')">X</button></div>
+    <div class="content">
+      <div class="card"><div>Best tijd: <strong id="bestTimeText">0.00</strong> sec</div><div>Laatste tijd: <strong id="lastTimeText">0.00</strong> sec</div><div>Gegevens worden opgeslagen in <code>localStorage</code>.</div></div>
+      <div class="card"><div class="row"><button class="appBtn" onclick="saveGame()">Opslaan</button><button class="appBtn" onclick="resetSave()">Reset save</button><button class="appBtn" onclick="loadGame()">Laden</button></div></div>
+    </div>
+  </div>
+
+  <div id="taskbar">
+    <div id="taskbarLeft">
+      <div id="startBadge">Windows Slak</div>
+      <div class="stat">Tijd: <span id="timeText">0.00</span>s</div>
+      <div class="stat">Highscore: <span id="bestText">0.00</span>s</div>
+      <div class="stat">Score: <span id="scoreText">0</span></div>
+    </div>
+    <div id="taskbarRight"><div class="stat" id="saveState">Niet opgeslagen</div></div>
+  </div>
+
+  <div id="slug">🐌</div>
+  <div id="cursor"></div>
+
+  <div id="overlay">
+    <div id="overlayBox">
+      <h1>Game Over</h1>
+      <p>De slak heeft je muis geraakt. Je sessie is gestopt.</p>
+      <p>Tijd: <strong id="finalTime">0.00</strong> sec<br>Beste tijd: <strong id="finalBest">0.00</strong> sec</p>
+      <button class="bigBtn primary" onclick="restartGame()">Opnieuw spelen</button>
+      <button class="bigBtn" onclick="saveGame()">Opslaan</button>
+      <div class="small">Tip: de slak kan moe worden, slapen of dansen.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const clamp = (v,min,max) => Math.max(min, Math.min(max, v));
+  const format = n => Number(n).toFixed(2);
+
+  const els = {
+    cursor:$('cursor'), slug:$('slug'), overlay:$('overlay'),
+    timeText:$('timeText'), bestText:$('bestText'), scoreText:$('scoreText'),
+    bestTimeText:$('bestTimeText'), lastTimeText:$('lastTimeText'), finalTime:$('finalTime'), finalBest:$('finalBest'),
+    miniGame:$('miniGame'), siteBox:$('siteBox'), playlist:$('playlist'), screen:$('screen'), screenOverlay:$('screenOverlay'),
+    videoTitle:$('videoTitle'), videoDesc:$('videoDesc'), progress:$('progress'), videoTime:$('videoTime'), videoDur:$('videoDur'), playBtn:$('playBtn'),
+    contacts:$('contacts'), chatName:$('chatName'), chatStatus:$('chatStatus'), messages:$('messages'), chatInput:$('chatInput'),
+    notesArea:$('notesArea'), calcInput:$('calcInput'), calcResult:$('calcResult'), storeInfo:$('storeInfo'), mailList:$('mailList'), toastArea:$('toastArea'),
+    musicState:$('musicState'), weatherBox:$('weatherBox'), speedLabel:$('speedLabel'), shieldLabel:$('shieldLabel'), saveState:$('saveState'),
+    popupLayer:$('popupLayer'), muteLabel:$('muteLabel')
+  };
+
+  const SAVE_KEY = 'slakje_8bit_save_v2';
+  const NOTES_KEY = 'slakje_8bit_notes_v1';
+
+  const state = {
+    mouse:{x:innerWidth/2,y:innerHeight/2},
+    slug:{x:140,y:140},
+    running:true,
+    startTime:performance.now(),
+    elapsed:0,
+    score:0,
+    bestTime:0,
+    lastTime:0,
+    saveDirty:false,
+    videoTimer:null,
+    videoPlaying:false,
+    currentVideo:0,
+    videoElapsed:0,
+    currentContact:0,
+    shield:false,
+    slowUntil:0,
+    startShield:false,
+    fastMode:false,
+    musicOn:false,
+    notifTimer:null,
+    slugMood:'normal',
+    moodUntil:0,
+    moodTimer:null,
+    muted:false,
+    audioCtx:null,
+    nextPopupTimer:null
+  };
+
+  const videos = [
+    {title:'AI bouwt een stad in 60 sec', desc:'Een snelle montage van een futuristische stad.', duration:62, embed:'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1', thumb:'🤖'},
+    {title:'Ik liet een AI een game maken', desc:'Een experiment met prompt-driven game design.', duration:148, embed:'https://www.youtube.com/embed/oHg5SJYRHA0?autoplay=1', thumb:'🧠'},
+    {title:'AI tekent de toekomst van gaming', desc:'Concept art, ideeën en game-interfaces met AI.', duration:93, embed:'https://www.youtube.com/embed/5NV6Rdv1a3I?autoplay=1', thumb:'✨'},
+    {title:'Deze AI leert sneller dan ik kan klikken', desc:'Een grappige speedrun-video over slimme bots.', duration:111, embed:'https://www.youtube.com/embed/jNQXAC9IVRw?autoplay=1', thumb:'⚡'}
+  ];
+
+  const chats = [
+    {name:'Mila', status:'online', messages:['Hey! Heb je de slak al overleefd?','Ik denk dat je snel moet bewegen 😅']},
+    {name:'Noah', status:'online', messages:['Ik ben bezig met een nieuwe game.','Wil je later een boss fight toevoegen?']},
+    {name:'AI Bot', status:'typen...', messages:['Hallo mens.','Ik kan je helpen met punten en tips.']},
+    {name:'Sam', status:'offline', messages:['Ik kijk nu een AI-video.','Stuur je me straks de code?']}
+  ];
+
+  const inbox = [
+    {from:'Mila', subject:'Uitnodiging', body:'Kom je in de chat? Ik heb een tip voor je.', action:'chat', unread:true},
+    {from:'Game Store', subject:'Dagdeal', body:'Koop nu een shield of vertraag de slak.', action:'store', unread:true},
+    {from:'System', subject:'Focus boost', body:'Je krijgt een tijdelijke speed boost voor punten.', action:'bonus', unread:false}
+  ];
+
+  const soundDefs = {
+    beep: {type:'square', f1: 880, f2: 880, dur: 0.12},
+    boop: {type:'triangle', f1: 440, f2: 220, dur: 0.18},
+    click:{type:'square', f1: 1200, f2: 1200, dur: 0.05},
+    error:{type:'sawtooth', f1: 180, f2: 90, dur: 0.35},
+    win:  {type:'sine', f1: 523.25, f2: 1046.5, dur: 0.28},
+    dance:{type:'triangle', f1: 330, f2: 660, dur: 0.22}
+  };
+
+  function ensureAudio(){
+    if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return state.audioCtx;
+  }
+
+  function playTone(def){
+    if (state.muted) return;
+    const ctx = ensureAudio();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = def.type;
+    osc.frequency.setValueAtTime(def.f1, now);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(50, def.f2), now + def.dur);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + def.dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + def.dur + 0.02);
+  }
+
+  function playSound(name){
+    const def = soundDefs[name];
+    if (!def) return;
+    playTone(def);
+    if (name === 'dance') {
+      state.slugMood = 'dance';
+      state.moodUntil = performance.now() + 1800;
+      els.slug.classList.add('dance');
+      showToast('Soundboard', 'De slak raakt in de dansmodus.', { actionLabel:'Haha' });
+      setTimeout(() => els.slug.classList.remove('dance'), 1800);
+    } else if (name === 'win') {
+      state.score += 3;
+      state.saveDirty = true;
+      updateHUD();
+    } else if (name === 'error') {
+      showToast('Beep', 'Error sound gespeeld.', { actionLabel:'Oké' });
+    }
+  }
+
+  function toggleMute(){
+    state.muted = !state.muted;
+    els.muteLabel.textContent = state.muted ? 'Geluid uit' : 'Geluid aan';
+    showToast('Soundboard', state.muted ? 'Geluid staat uit.' : 'Geluid staat aan.', { actionLabel:'Oké' });
+  }
+
+  function updateHUD(){
+    els.timeText.textContent = format(state.elapsed);
+    els.bestText.textContent = format(state.bestTime);
+    els.scoreText.textContent = String(state.score);
+    els.bestTimeText.textContent = format(state.bestTime);
+    els.lastTimeText.textContent = format(state.lastTime);
+    els.finalTime.textContent = format(state.elapsed);
+    els.finalBest.textContent = format(state.bestTime);
+    els.speedLabel.textContent = state.fastMode ? 'Snel' : 'Normaal';
+    els.shieldLabel.textContent = state.startShield ? 'Aan' : 'Uit';
+    if (state.slugMood === 'sleep') els.slug.textContent = '💤';
+    else if (state.slugMood === 'dance') els.slug.textContent = '🕺';
+    else if (state.slugMood === 'tired') els.slug.textContent = '😮‍💨';
+    else els.slug.textContent = '🐌';
+  }
+
+  function openWindow(id){ $(id).style.display = 'block'; $(id).style.zIndex = String(30 + Math.floor(Math.random()*20)); }
+  function closeWindow(id){ $(id).style.display = 'none'; }
+
+  function showToast(title, text, opts={}){
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<div class="toastTitle">${title}</div><div class="toastText">${text}</div>`;
+    if (opts.actionLabel) {
+      const actions = document.createElement('div');
+      actions.className = 'toastActions';
+      const btn = document.createElement('button');
+      btn.className = 'toastMiniBtn';
+      btn.textContent = opts.actionLabel;
+      btn.onclick = e => { e.stopPropagation(); if (opts.onAction) opts.onAction(); toast.remove(); };
+      actions.appendChild(btn);
+      toast.appendChild(actions);
+    }
+    toast.onclick = () => { if (opts.onAction) opts.onAction(); toast.remove(); };
+    els.toastArea.appendChild(toast);
+    setTimeout(() => { if (toast.parentNode) { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 220); } }, 7000);
+  }
+
+  function renderMiniGame(){
+    const em = ['🍕','⭐','💎','🎯','⚡','🧩','🔥','🎲'];
+    els.miniGame.innerHTML = '';
+    em.forEach((e,i) => {
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.textContent = e;
+      tile.onclick = () => { state.score += 2 + i; state.saveDirty = true; tile.textContent = '✓'; updateHUD(); playSound('click'); };
+      els.miniGame.appendChild(tile);
+    });
+  }
+
+  function renderContacts(){
+    els.contacts.innerHTML = '';
+    chats.forEach((c,i) => {
+      const div = document.createElement('div');
+      div.className = 'contact' + (i === state.currentContact ? ' active' : '');
+      div.textContent = c.name;
+      div.onclick = () => { state.currentContact = i; renderContacts(); renderChat(); };
+      els.contacts.appendChild(div);
+    });
+  }
+
+  function renderChat(){
+    const c = chats[state.currentContact];
+    els.chatName.textContent = c.name;
+    els.chatStatus.textContent = c.status;
+    els.messages.innerHTML = '';
+    c.messages.forEach((m,idx) => {
+      const d = document.createElement('div');
+      d.className = 'msg ' + (idx % 2 === 0 ? 'them' : 'me');
+      d.textContent = m;
+      els.messages.appendChild(d);
+    });
+    els.messages.scrollTop = els.messages.scrollHeight;
+  }
+
+  function buildPlaylist(){
+    els.playlist.innerHTML = '';
+    videos.forEach((v,i) => {
+      const item = document.createElement('div');
+      item.className = 'videoItem';
+      item.id = 'videoItem' + i;
+      item.onclick = () => selectVideo(i, true);
+      item.innerHTML = `<div class="thumb">${v.thumb}</div><div><div style="font-weight:700;font-size:13px;line-height:1.25">${v.title}</div><div class="small">${v.duration}s • AI video</div></div>`;
+      els.playlist.appendChild(item);
+    });
+  }
+
+  function selectVideo(index, autoplay = true){
+    pauseVideo();
+    state.currentVideo = index;
+    const v = videos[index];
+    document.querySelectorAll('.videoItem').forEach(el => el.classList.remove('active'));
+    const active = $('videoItem' + index);
+    if (active) active.classList.add('active');
+    els.videoTitle.textContent = v.title;
+    els.videoDesc.textContent = v.desc;
+    els.videoDur.textContent = format(v.duration);
+    state.videoElapsed = 0;
+    els.progress.style.width = '0%';
+    els.videoTime.textContent = '0.0';
+    els.screen.innerHTML = `<iframe src="${v.embed}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    els.screen.appendChild(els.screenOverlay);
+    els.screenOverlay.style.display = autoplay ? 'none' : 'grid';
+    if (autoplay) playVideo();
+  }
+
+  function playVideo(){
+    pauseVideo();
+    state.videoPlaying = true;
+    els.playBtn.textContent = 'Pause';
+    els.screenOverlay.style.display = 'none';
+    const v = videos[state.currentVideo];
+    state.videoTimer = setInterval(() => {
+      if (!state.videoPlaying) return;
+      state.videoElapsed += 0.2;
+      if (state.videoElapsed >= v.duration) {
+        state.videoElapsed = v.duration;
+        pauseVideo();
+      }
+      els.progress.style.width = `${(state.videoElapsed / v.duration) * 100}%`;
+      els.videoTime.textContent = state.videoElapsed.toFixed(1);
+    }, 200);
+    playSound('beep');
+  }
+
+  function pauseVideo(){
+    state.videoPlaying = false;
+    els.playBtn.textContent = 'Play';
+    if (state.videoTimer) clearInterval(state.videoTimer);
+    state.videoTimer = null;
+    els.screenOverlay.style.display = 'grid';
+  }
+
+  function togglePlay(){ state.videoPlaying ? pauseVideo() : playVideo(); }
+  function nextVideo(){ selectVideo((state.currentVideo + 1) % videos.length, true); }
+
+  function setWebSite(name){
+    const pages = {
+      Nieuws:`<h3 style="margin-top:0">Nieuws</h3><p>Live headlines, maar dan in je game.</p><p><a class="fakeLink">Lees meer</a></p>`,
+      Shop:`<h3 style="margin-top:0">Shop</h3><p>Koop power-ups, skins en extra muisbescherming.</p><p><a class="fakeLink">Bekijk aanbiedingen</a></p>`,
+      Chat:`<h3 style="margin-top:0">Chat</h3><p>Praat met NPC's, vrienden en mysterieuze slakken.</p><p><a class="fakeLink">Open chat</a></p>`,
+      Forum:`<h3 style="margin-top:0">Forum</h3><p>Discussies over games, apps en hoe je sneller bent dan een slak.</p><p><a class="fakeLink">Ga naar forum</a></p>`
+    };
+    els.siteBox.innerHTML = pages[name] || '<p>Geen content.</p>';
+  }
+
+  function saveNotes(){ localStorage.setItem(NOTES_KEY, els.notesArea.value); els.saveState.textContent = 'Notities opgeslagen'; }
+  function loadNotes(){ const raw = localStorage.getItem(NOTES_KEY); if (raw !== null) els.notesArea.value = raw; }
+
+  function saveGame(){
+    const data = {
+      bestTime: state.bestTime,
+      lastTime: state.lastTime,
+      score: state.score,
+      shield: state.shield,
+      startShield: state.startShield,
+      fastMode: state.fastMode,
+      currentVideo: state.currentVideo,
+      currentContact: state.currentContact,
+      notes: els.notesArea.value,
+      inboxUnread: inbox.map(m => m.unread),
+      musicOn: state.musicOn,
+      slugMood: state.slugMood,
+      muted: state.muted
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    els.saveState.textContent = 'Opgeslagen';
+    state.saveDirty = false;
+    updateHUD();
+  }
+
+  function loadGame(){
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) { els.saveState.textContent = 'Geen save gevonden'; return; }
+    try {
+      const data = JSON.parse(raw);
+      state.bestTime = Number(data.bestTime || 0);
+      state.lastTime = Number(data.lastTime || 0);
+      state.score = Number(data.score || 0);
+      state.shield = !!data.shield;
+      state.startShield = !!data.startShield;
+      state.fastMode = !!data.fastMode;
+      state.currentVideo = Number(data.currentVideo || 0);
+      state.currentContact = Number(data.currentContact || 0);
+      state.musicOn = !!data.musicOn;
+      state.slugMood = data.slugMood || 'normal';
+      state.muted = !!data.muted;
+      els.muteLabel.textContent = state.muted ? 'Geluid uit' : 'Geluid aan';
+      if (Array.isArray(data.inboxUnread)) {
+        inbox.forEach((m,i) => { if (data.inboxUnread[i] !== undefined) m.unread = !!data.inboxUnread[i]; });
+      }
+      if (typeof data.notes === 'string') els.notesArea.value = data.notes;
+      renderContacts(); renderChat(); renderMail(); selectVideo(state.currentVideo, false); updateMusicUI(); updateHUD(); els.saveState.textContent = 'Save geladen';
+    } catch {
+      els.saveState.textContent = 'Save fout';
+    }
+  }
+
+  function resetSave(){
+    localStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem(NOTES_KEY);
+    state.bestTime = 0;
+    state.lastTime = 0;
+    state.score = 0;
+    state.shield = false;
+    state.startShield = false;
+    state.fastMode = false;
+    state.musicOn = false;
+    state.slugMood = 'normal';
+    state.muted = false;
+    els.notesArea.value = '';
+    renderMail();
+    updateMusicUI();
+    els.muteLabel.textContent = 'Geluid aan';
+    updateHUD();
+    els.saveState.textContent = 'Save gewist';
+  }
+
+  function gameOver(){
+    state.running = false;
+    els.overlay.style.display = 'flex';
+    state.lastTime = state.elapsed;
+    if (state.elapsed > state.bestTime) state.bestTime = state.elapsed;
+    updateHUD();
+    saveGame();
+    playSound('error');
+  }
+
+  function restartGame(){
+    els.overlay.style.display = 'none';
+    state.running = true;
+    state.startTime = performance.now();
+    state.elapsed = 0;
+    state.score = 0;
+    state.saveDirty = false;
+    state.shield = state.startShield;
+    state.slug = { x: 120, y: 120 };
+    state.slugMood = 'normal';
+    els.slug.classList.remove('dance');
+    els.slug.style.left = '120px';
+    els.slug.style.top = '120px';
+    updateHUD();
+  }
+
+  function addScore(amount, reason = ''){
+    state.score += amount;
+    state.saveDirty = true;
+    updateHUD();
+    if (reason) showToast('Score gekregen', `${reason}: +${amount} punten.`, { actionLabel:'Oké' });
+    playSound('click');
+  }
+
+  function renderMail(){
+    els.mailList.innerHTML = '';
+    inbox.forEach((mail, i) => {
+      const div = document.createElement('div');
+      div.className = 'mailItem' + (mail.unread ? ' unread' : '');
+      div.innerHTML = `<strong>${mail.from}</strong> — ${mail.subject}<div class="small">${mail.body}</div>`;
+      div.onclick = () => openMail(i);
+      els.mailList.appendChild(div);
+    });
+  }
+
+  function openMail(i){
+    const mail = inbox[i];
+    mail.unread = false;
+    renderMail();
+    openWindow('mailWin');
+    if (mail.action === 'chat') {
+      state.currentContact = 0;
+      renderContacts();
+      renderChat();
+      openWindow('chatWin');
+      showToast('Chat bericht', 'Mila heeft je uitgenodigd in de chat.', { actionLabel:'Open chat', onAction:() => openWindow('chatWin') });
+    } else if (mail.action === 'store') {
+      openWindow('storeWin');
+      showToast('Store tip', 'Er is een tijdelijke aanbieding in de store.', { actionLabel:'Open store', onAction:() => openWindow('storeWin') });
+    } else if (mail.action === 'bonus') {
+      state.score += 15;
+      state.saveDirty = true;
+      state.slowUntil = performance.now() + 3000;
+      showToast('Bonus ontvangen', 'Je krijgt 15 punten en de slak wordt even trager.', { actionLabel:'Nice' });
+      updateHUD();
+    } else if (mail.action === 'slow') {
+      state.slowUntil = performance.now() + 5000;
+      showToast('Slak vertraagd', 'De slak is 5 seconden trager.', { actionLabel:'Top' });
+    }
+  }
+
+  function sendSystemMail(subject, body, action = ''){
+    inbox.unshift({ from:'System', subject, body, action, unread:true });
+    renderMail();
+    showToast('Nieuwe mail', `${subject}: ${body}`, { actionLabel:'Open', onAction:() => openMail(0) });
+    playSound('beep');
+  }
+
+  function sendChat(){
+    const text = els.chatInput.value.trim();
+    if (!text) return;
+    chats[state.currentContact].messages.push(text);
+    els.chatInput.value = '';
+    renderChat();
+    state.score += 1;
+    state.saveDirty = true;
+    updateHUD();
+    playSound('click');
+    setTimeout(() => {
+      const replies = ['Nice!','Haha, oké 😄','Goed bezig.','Ik voel de slak al aankomen...','Interessant!'];
+      chats[state.currentContact].messages.push(replies[Math.floor(Math.random() * replies.length)]);
+      renderChat();
+    }, 500);
+  }
+
+  function doCalc(){
+    try {
+      const expr = els.calcInput.value;
+      if (!/^[0-9+\-*/().\s]+$/.test(expr)) throw new Error('x');
+      els.calcResult.textContent = String(Function('"use strict"; return (' + expr + ')')());
+      playSound('win');
+    } catch {
+      els.calcResult.textContent = 'Foute som';
+      playSound('error');
+    }
+  }
+
+  function buyItem(type){
+    if (type === 'slow' && state.score >= 30) {
+      state.score -= 30;
+      state.slowUntil = performance.now() + 12000;
+      els.storeInfo.textContent = 'Slak vertraagd voor 12 seconden.';
+      showToast('Aankoop gelukt', 'De slak is tijdelijk trager.', { actionLabel:'Mooi' });
+      playSound('win');
+    } else if (type === 'shield' && state.score >= 50) {
+      state.score -= 50;
+      state.shield = true;
+      els.storeInfo.textContent = 'Shield gekocht. Eén keer beschermd.';
+      showToast('Aankoop gelukt', 'Je hebt een schild gekocht.', { actionLabel:'Nice' });
+      playSound('win');
+    } else if (type === 'bonus' && state.score >= 40) {
+      state.score -= 40;
+      state.score += 80;
+      els.storeInfo.textContent = 'Bonus gekocht. Je krijgt direct extra score.';
+      showToast('Aankoop gelukt', 'Je kreeg direct een bonus.', { actionLabel:'Nice' });
+      playSound('win');
+    } else {
+      els.storeInfo.textContent = 'Niet genoeg score voor dit item.';
+      updateHUD();
+      playSound('error');
+      return;
+    }
+    state.saveDirty = true;
+    updateHUD();
+  }
+
+  function updateMusicUI(){
+    els.musicState.textContent = state.musicOn ? 'Muziek speelt.' : 'Muziek is uit.';
+  }
+
+  function musicAction(action){
+    if (action === 'play') state.musicOn = true;
+    if (action === 'pause') state.musicOn = false;
+    if (action === 'boost') {
+      state.musicOn = true;
+      state.fastMode = true;
+      state.score += 5;
+      playSound('dance');
+      setTimeout(() => { state.fastMode = false; updateHUD(); }, 8000);
+    }
+    state.saveDirty = true;
+    updateMusicUI();
+    updateHUD();
+    showToast('Muziek', state.musicOn ? 'Muziek staat aan.' : 'Muziek staat uit.', { actionLabel:'Oké' });
+  }
+
+  function weatherEvent(){
+    const types = [
+      { title:'Zonnig', text:'Lekker weer. Alles voelt een beetje sneller.' },
+      { title:'Regen', text:'De slak glijdt sneller. Pas op!' },
+      { title:'Storm', text:'Er waait een notificatie binnen.' },
+      { title:'Mist', text:'Je krijgt een tijdelijk shield in de mist.' }
+    ];
+    const w = types[Math.floor(Math.random() * types.length)];
+    els.weatherBox.innerHTML = `<h3 style="margin-top:0">${w.title}</h3><p>${w.text}</p>`;
+    if (w.title === 'Zonnig') {
+      state.score += 5;
+      state.fastMode = true;
+      setTimeout(() => { state.fastMode = false; updateHUD(); }, 6000);
+    }
+    if (w.title === 'Regen') state.slowUntil = performance.now() + 4000;
+    if (w.title === 'Mist') state.shield = true;
+    if (w.title === 'Storm') showToast('Weerbericht', 'Storm veroorzaakt een appmelding.', { actionLabel:'Open mail', onAction:() => openWindow('mailWin') });
+    state.saveDirty = true;
+    updateHUD();
+  }
+
+  function speedToggle(){ state.fastMode = !state.fastMode; state.saveDirty = true; updateHUD(); }
+  function toggleStartShield(){ state.startShield = !state.startShield; if (state.startShield) state.shield = true; state.saveDirty = true; updateHUD(); }
+  function toggleMute(){ state.muted = !state.muted; els.muteLabel.textContent = state.muted ? 'Geluid uit' : 'Geluid aan'; showToast('Soundboard', state.muted ? 'Geluid staat uit.' : 'Geluid staat aan.', { actionLabel:'Oké' }); }
+
+  function randomAppNotification(){
+    const r = Math.random();
+    if (r < 0.25) {
+      sendSystemMail('Nieuwe chatmelding', 'Mila heeft je een bericht gestuurd.', 'chat');
+    } else if (r < 0.5) {
+      sendSystemMail('Store aanbieding', 'Een tijdelijke aanbieding is beschikbaar.', 'store');
+    } else if (r < 0.75) {
+      state.score += 8;
+      state.slowUntil = performance.now() + 2500;
+      showToast('System update', 'Je kreeg 8 punten en de slak vertraagt even.', { actionLabel:'Top' });
+    } else {
+      state.shield = true;
+      showToast('Bescherming actief', 'Een appbericht gaf je een shield.', { actionLabel:'Nice' });
+    }
+    state.saveDirty = true;
+    updateHUD();
+    scheduleNotification();
+  }
+
+  function scheduleNotification(){
+    clearTimeout(state.notifTimer);
+    state.notifTimer = setTimeout(randomAppNotification, 14000 + Math.random() * 18000);
+  }
+
+  function setSlugMood(mood, durationMs){
+    state.slugMood = mood;
+    updateHUD();
+    clearTimeout(state.moodTimer);
+    state.moodUntil = performance.now() + durationMs;
+    state.moodTimer = setTimeout(() => {
+      state.slugMood = 'normal';
+      updateHUD();
+    }, durationMs);
+  }
+
+  function updateSlugMood(now){
+    if (state.slugMood === 'sleep' || state.slugMood === 'dance') return;
+    if (now < state.moodUntil) return;
+    const roll = Math.random();
+    if (roll < 0.012) {
+      setSlugMood('sleep', 2600 + Math.random() * 2200);
+      state.slowUntil = Math.max(state.slowUntil, now + 3200);
+      showToast('Slakje moe', 'De slak slaapt even en beweegt niet.', { actionLabel:'Oké' });
+    } else if (roll < 0.024) {
+      setSlugMood('dance', 1800 + Math.random() * 1600);
+      state.fastMode = false;
+      showToast('Slakje danst', 'De slak doet een dansje en wordt even onvoorspelbaar.', { actionLabel:'Hilarisch' });
+      state.slowUntil = Math.max(state.slowUntil, now + 1200);
+      playSound('dance');
+    } else if (roll < 0.048) {
+      setSlugMood('tired', 1800 + Math.random() * 1600);
+      state.slowUntil = Math.max(state.slowUntil, now + 2200);
+    }
+  }
+
+  function moveSlug(dt, now){
+    updateSlugMood(now);
+    if (state.slugMood === 'sleep') {
+      els.slug.style.transform = `translate(-50%,-50%) scale(${1 + Math.sin(now / 220) * 0.04})`;
+      return;
+    }
+
+    const dx = state.mouse.x - state.slug.x;
+    const dy = state.mouse.y - state.slug.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const slowFactor = now < state.slowUntil ? 0.55 : 1;
+    const speed = ((state.fastMode ? 60 : 46) + Math.min(state.elapsed * 1.8, 110)) * slowFactor;
+    const step = speed * dt;
+
+    if (state.slugMood === 'dance') {
+      state.slug.x += Math.cos(now / 140) * 1.8;
+      state.slug.y += Math.sin(now / 120) * 1.4;
+      state.slug.x = clamp(state.slug.x, 20, innerWidth - 20);
+      state.slug.y = clamp(state.slug.y, 20, innerHeight - 70);
+      els.slug.style.left = state.slug.x + 'px';
+      els.slug.style.top = state.slug.y + 'px';
+      els.slug.style.transform = `translate(-50%,-50%) rotate(${Math.sin(now / 90) * 10}deg)`;
+      const hitDance = Math.hypot(state.mouse.x - state.slug.x, state.mouse.y - state.slug.y);
+      if (hitDance < 28 && state.running) {
+        if (state.shield) {
+          state.shield = false;
+          els.saveState.textContent = 'Shield kapot';
+          state.slowUntil = now + 2500;
+          state.score += 10;
+          state.saveDirty = true;
+          updateHUD();
+          return;
+        }
+        gameOver();
+      }
+      return;
+    }
+
+    state.slug.x += (dx / dist) * step;
+    state.slug.y += (dy / dist) * step;
+    state.slug.x = clamp(state.slug.x, 20, innerWidth - 20);
+    state.slug.y = clamp(state.slug.y, 20, innerHeight - 70);
+    els.slug.style.left = state.slug.x + 'px';
+    els.slug.style.top = state.slug.y + 'px';
+    els.slug.style.transform = 'translate(-50%,-50%)';
+
+    const hit = Math.hypot(state.mouse.x - state.slug.x, state.mouse.y - state.slug.y);
+    if (hit < 28 && state.running) {
+      if (state.shield) {
+        state.shield = false;
+        els.saveState.textContent = 'Shield kapot';
+        state.slowUntil = now + 2500;
+        state.score += 10;
+        state.saveDirty = true;
+        updateHUD();
+        return;
+      }
+      gameOver();
+    }
+  }
+
+  function resizeWindows(){
+    document.querySelectorAll('.window').forEach(w => {
+      const r = w.getBoundingClientRect();
+      w.style.left = clamp(r.left, 10, innerWidth - r.width - 10) + 'px';
+      w.style.top = clamp(r.top, 10, innerHeight - r.height - 62) + 'px';
+    });
+  }
+
+  function initDrag(){
+    document.querySelectorAll('.window').forEach(win => {
+      const bar = win.querySelector('.titlebar');
+      let dragging = false;
+      let ox = 0;
+      let oy = 0;
+      bar.addEventListener('mousedown', e => {
+        dragging = true;
+        ox = e.clientX - win.offsetLeft;
+        oy = e.clientY - win.offsetTop;
+        win.style.zIndex = String(60 + Math.floor(Math.random() * 20));
+        playSound('click');
+      });
+      window.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        win.style.left = clamp(e.clientX - ox, 0, innerWidth - win.offsetWidth) + 'px';
+        win.style.top = clamp(e.clientY - oy, 0, innerHeight - win.offsetHeight - 52) + 'px';
+      });
+      window.addEventListener('mouseup', () => dragging = false);
+    });
+  }
+
+  function loadOnStart(){
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) {
+      try {
+        const data = JSON.parse(raw);
+        state.bestTime = Number(data.bestTime || 0);
+        state.lastTime = Number(data.lastTime || 0);
+        state.score = Number(data.score || 0);
+        state.shield = !!data.shield;
+        state.startShield = !!data.startShield;
+        state.fastMode = !!data.fastMode;
+        state.currentVideo = Number(data.currentVideo || 0);
+        state.currentContact = Number(data.currentContact || 0);
+        state.musicOn = !!data.musicOn;
+        state.slugMood = data.slugMood || 'normal';
+        state.muted = !!data.muted;
+        els.muteLabel.textContent = state.muted ? 'Geluid uit' : 'Geluid aan';
+        if (Array.isArray(data.inboxUnread)) {
+          inbox.forEach((m, i) => { if (data.inboxUnread[i] !== undefined) m.unread = !!data.inboxUnread[i]; });
+        }
+        if (typeof data.notes === 'string') els.notesArea.value = data.notes;
+      } catch {}
+    }
+    loadNotes();
+    renderContacts();
+    renderChat();
+    renderMail();
+    buildPlaylist();
+    selectVideo(state.currentVideo, false);
+    updateMusicUI();
+    updateHUD();
+  }
+
+  function spawnPopup(type = 'glitch'){
+    const p = document.createElement('div');
+    p.className = 'popup ' + type;
+    const w = 240;
+    const h = 140;
+    const x = Math.random() * Math.max(40, innerWidth - w - 20) + 10;
+    const y = Math.random() * Math.max(40, innerHeight - h - 80) + 10;
+    p.style.left = x + 'px';
+    p.style.top = y + 'px';
+    p.innerHTML = `
+      <div class="popupHead">
+        <span>${type === 'ad' ? 'AD' : 'GLITCH'}</span>
+        <button class="popupClose">X</button>
+      </div>
+      <div class="popupBody"></div>
+    `;
+    const body = p.querySelector('.popupBody');
+    if (type === 'ad') {
+      body.innerHTML = `<strong>SUPER GAMER ENERGY</strong><br>KOOP NU!<br><small>+999 XP drink</small>`;
+    } else {
+      body.innerHTML = `<strong>!!! SYSTEM GLITCH !!!</strong><br>Reality.exe crashed<br><small>Click X to close</small>`;
+      if (Math.random() < 0.4) showToast('Glitch', 'Er verscheen een glitch-venster.', { actionLabel:'Oké' });
+    }
+    const close = () => {
+      p.remove();
+      if (type === 'ad') playSound('click');
+      else playSound('beep');
+    };
+    p.querySelector('.popupClose').onclick = close;
+    p.addEventListener('click', (e) => {
+      if (e.target.classList.contains('popupClose')) return;
+      if (type === 'ad' && Math.random() < 0.2) state.score += 1;
+    });
+    els.popupLayer.appendChild(p);
+    return p;
+  }
+
+  function schedulePopup(){
+    clearTimeout(state.nextPopupTimer);
+    const delay = 12000 + Math.random() * 14000;
+    state.nextPopupTimer = setTimeout(() => {
+      if (document.querySelectorAll('.popup').length < 3) {
+        spawnPopup(Math.random() < 0.5 ? 'glitch' : 'ad');
+      }
+      schedulePopup();
+    }, delay);
+  }
+
+  window.addEventListener('mousemove', e => {
+    state.mouse.x = e.clientX;
+    state.mouse.y = e.clientY;
+    els.cursor.style.left = e.clientX + 'px';
+    els.cursor.style.top = e.clientY + 'px';
+  });
+
+  window.addEventListener('resize', resizeWindows);
+
+  window.openWindow = openWindow;
+  window.closeWindow = closeWindow;
+  window.addScore = addScore;
+  window.togglePlay = togglePlay;
+  window.nextVideo = nextVideo;
+  window.setWebSite = setWebSite;
+  window.saveNotes = saveNotes;
+  window.loadNotes = loadNotes;
+  window.doCalc = doCalc;
+  window.buyItem = buyItem;
+  window.musicAction = musicAction;
+  window.weatherEvent = weatherEvent;
+  window.speedToggle = speedToggle;
+  window.toggleStartShield = toggleStartShield;
+  window.saveGame = saveGame;
+  window.loadGame = loadGame;
+  window.resetSave = resetSave;
+  window.restartGame = restartGame;
+  window.sendChat = sendChat;
+  window.sendSystemMail = sendSystemMail;
+  window.playSound = playSound;
+  window.toggleMute = toggleMute;
+
+  let last = performance.now();
+  function loop(now){
+    const dt = Math.min((now - last) / 1000, 0.03);
+    last = now;
+    if (state.running) {
+      state.elapsed = (now - state.startTime) / 1000;
+      if (Math.floor(state.elapsed) > Math.floor(state.elapsed - dt)) state.score += 1;
+      moveSlug(dt, now);
+    }
+    updateHUD();
+    requestAnimationFrame(loop);
+  }
+
+  setInterval(() => {
+    if (state.running && state.saveDirty) saveGame();
+  }, 5000);
+
+  renderMiniGame();
+  buildPlaylist();
+  initDrag();
+  loadOnStart();
+  openWindow('gameWin');
+  scheduleNotification();
+  schedulePopup();
+  requestAnimationFrame(loop);
+
+  window.addEventListener('beforeunload', () => {
+    if (state.running) {
+      state.lastTime = state.elapsed;
+      if (state.elapsed > state.bestTime) state.bestTime = state.elapsed;
+      saveGame();
+    }
+  });
+})();
+</script>
+</body>
+</html>
