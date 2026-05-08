@@ -8,53 +8,69 @@
 <style>
 body {
   margin: 0;
-  font-family: Arial;
-  background: linear-gradient(135deg, #1e3a8a, #020617);
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
   color: white;
   text-align: center;
 }
 
 h1 {
   margin-top: 20px;
+  font-size: 32px;
 }
 
-/* zoekbalk */
+p {
+  opacity: 0.75;
+}
+
 #search {
-  margin-top: 10px;
+  margin-top: 15px;
   padding: 12px;
   width: 80%;
   max-width: 320px;
   border-radius: 12px;
   border: none;
   font-size: 16px;
+  outline: none;
 }
 
-/* menu grid */
 .menu {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 15px;
   padding: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
-/* game blok */
 .game {
-  padding: 20px;
-  border-radius: 15px;
+  padding: 22px 12px;
+  border-radius: 18px;
   background: #1e293b;
   text-decoration: none;
   color: white;
   font-size: 18px;
   transition: 0.2s;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
 }
 
 .game:hover {
-  background: #334155;
   transform: scale(1.05);
+  background: #334155;
+}
+
+.game.hidden {
+  display: none;
+}
+
+@media (max-width: 500px) {
+  .game {
+    font-size: 17px;
+    padding: 20px 10px;
+  }
 }
 </style>
 </head>
-
 <body>
 
 <h1>⚡ StormPlay</h1>
@@ -62,33 +78,28 @@ h1 {
 
 <input type="text" id="search" placeholder="Zoek een game...">
 
-<!-- 🎮 GAMES -->
 <div class="menu">
-
-  <a href="bunny/index.html" class="game">🐰 Bunny</a>
-  <a href="boxgame/index.html" class="game">📦 Box</a>
-  <a href="fishscore/index.html" class="game">🐟 Fish</a>
-  <a href="dogsnake/index.html" class="game">🐍 Snake</a>
+  <a href="bunny/index.html" class="game">🐰 Bunny Knight</a>
+  <a href="boxgame/index.html" class="game">📦 Box Game</a>
+  <a href="fishscore/index.html" class="game">🐟 Fish Score</a>
+  <a href="dogsnake/index.html" class="game">🐍 DogSnake</a>
   <a href="sandbox/index.html" class="game">🧱 Sandbox</a>
   <a href="puppy/index.html" class="game">🐶 Puppy Clicker</a>
-  <a href="maze/index.html" class="game">🧩 Maze</a>
+  <a href="maze/index.html" class="game">🧩 Maze Game</a>
   <a href="eiland/index.html" class="game">🌴 Eiland Simulator</a>
-
-  <!-- 🔥 NIEUWE GAME -->
   <a href="runner/index.html" class="game">🏃 Pixel Runner X</a>
-
+  <a href="slakje/index.html" class="game">🐌 Slakje 8-Bit Desktop</a>
 </div>
 
 <script>
-// 🔍 zoek functie
 const search = document.getElementById("search");
 const games = document.querySelectorAll(".game");
 
 search.addEventListener("input", () => {
-  let val = search.value.toLowerCase();
-
-  games.forEach(g => {
-    g.style.display = g.innerText.toLowerCase().includes(val) ? "block" : "none";
+  const value = search.value.toLowerCase();
+  games.forEach(game => {
+    const text = game.innerText.toLowerCase();
+    game.classList.toggle("hidden", !text.includes(value));
   });
 });
 </script>
